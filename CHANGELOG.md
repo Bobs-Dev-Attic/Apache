@@ -9,6 +9,13 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.11.0] — 2026-07-04
+### Changed
+- **Top-attack missiles.** Guided missiles now fly a top-attack profile: they
+  drop off the rail, light the motor and climb steeply to a high cruise
+  altitude, then pitch over and dive straight down onto the target from above
+  (instead of homing in on a flat trajectory).
+
 ## [0.10.0] — 2026-07-04
 ### Added
 - **Swipe the sensor screen to cycle targets.** On mobile, swiping horizontally
