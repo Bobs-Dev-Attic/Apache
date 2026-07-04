@@ -19,11 +19,27 @@ export class MobileControls {
 
     this._bindJoystick();
     this._bindButtons();
+    this._bindWeapons();
+    this.setWeaponState(null);   // nothing selected at start
   }
 
   enable() {
     this.enabled = true;
     document.getElementById('mobile-controls').classList.remove('hidden');
+  }
+
+  /** Reflect the active weapon in the selector buttons (driven by main.js so
+   *  keyboard and touch stay in sync). mode: 'gun' | 'rockets' | 'missiles' | null */
+  setWeaponState(mode) {
+    const map = { gun: 'btn-gun', rockets: 'btn-rockets', missiles: 'btn-missiles' };
+    for (const [key, id] of Object.entries(map)) {
+      document.getElementById(id).classList.toggle('active', mode === key);
+    }
+    // FIRE is only meaningful once a weapon is selected.
+    document.getElementById('btn-fire').classList.toggle('disabled', !mode);
+    // CYCLE only cycles targets in a sensor (rocket/missile) mode.
+    document.getElementById('btn-cycle').classList.toggle('disabled',
+      mode !== 'rockets' && mode !== 'missiles');
   }
 
   _center() {
@@ -86,23 +102,56 @@ export class MobileControls {
     this.input.joy.y = -dy / max;
   }
 
-  _bindButtons() {
-    const hold = (id, onStart, onEnd) => {
-      const el = document.getElementById(id);
-      const start = (e) => { el.classList.add('active'); onStart(); e.preventDefault(); };
-      const end = (e) => { el.classList.remove('active'); onEnd(); e.preventDefault(); };
-      el.addEventListener('touchstart', start, { passive: false });
-      el.addEventListener('touchend', end, { passive: false });
-      el.addEventListener('touchcancel', end, { passive: false });
-      el.addEventListener('mousedown', start);
-      el.addEventListener('mouseup', end);
-      el.addEventListener('mouseleave', (e) => { if (el.classList.contains('active')) end(e); });
-    };
+  /** Momentary "hold" button: fires onStart on press, onEnd on release. */
+  _hold(id, onStart, onEnd) {
+    const el = document.getElementById(id);
+    const start = (e) => { el.classList.add('active'); onStart(); e.preventDefault(); };
+    const end = (e) => { el.classList.remove('active'); onEnd(); e.preventDefault(); };
+    el.addEventListener('touchstart', start, { passive: false });
+    el.addEventListener('touchend', end, { passive: false });
+    el.addEventListener('touchcancel', end, { passive: false });
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', end);
+    el.addEventListener('mouseleave', (e) => { if (el.classList.contains('active')) end(e); });
+  }
 
-    hold('btn-power',     () => this.input.mobileThrottle = 1,    () => this.input.mobileThrottle = 0);
-    hold('btn-up',        () => this.input.mobileCollective = 1,  () => this.input.mobileCollective = 0);
-    hold('btn-down',      () => this.input.mobileCollective = -1, () => this.input.mobileCollective = 0);
-    hold('btn-yaw-left',  () => this.input.mobileYaw = -1,        () => this.input.mobileYaw = 0);
-    hold('btn-yaw-right', () => this.input.mobileYaw = 1,         () => this.input.mobileYaw = 0);
+  /** One-shot "tap" button: fires fn once on press with a brief press flash. */
+  _tap(id, fn) {
+    const el = document.getElementById(id);
+    const press = (e) => {
+      el.classList.add('tapped');
+      fn();
+      e.preventDefault();
+    };
+    const release = () => el.classList.remove('tapped');
+    el.addEventListener('touchstart', press, { passive: false });
+    el.addEventListener('touchend', release, { passive: false });
+    el.addEventListener('touchcancel', release, { passive: false });
+    el.addEventListener('mousedown', press);
+    el.addEventListener('mouseup', release);
+    el.addEventListener('mouseleave', release);
+  }
+
+  _bindButtons() {
+    this._hold('btn-power',     () => this.input.mobileThrottle = 1,    () => this.input.mobileThrottle = 0);
+    this._hold('btn-up',        () => this.input.mobileCollective = 1,  () => this.input.mobileCollective = 0);
+    this._hold('btn-down',      () => this.input.mobileCollective = -1, () => this.input.mobileCollective = 0);
+    this._hold('btn-yaw-left',  () => this.input.mobileYaw = -1,        () => this.input.mobileYaw = 0);
+    this._hold('btn-yaw-right', () => this.input.mobileYaw = 1,         () => this.input.mobileYaw = 0);
+  }
+
+  _bindWeapons() {
+    // Weapon selection — reuse the same toggle callbacks the keyboard drives.
+    this._tap('btn-gun',      () => this.input.onToggleGun?.());
+    this._tap('btn-rockets',  () => this.input.onToggleRockets?.());
+    this._tap('btn-missiles', () => this.input.onToggleMissiles?.());
+    this._tap('btn-cycle',    () => this.input.onCycleTarget?.());
+    this._tap('btn-flares',   () => this.input.onDeployFlares?.());
+
+    // Context-sensitive FIRE: hold to fire the gun, tap to loose a rocket/missile.
+    // main.js decides what to do based on the armed weapon / target mode.
+    this._hold('btn-fire',
+      () => this.input.onFireDown?.(),
+      () => this.input.onFireUp?.());
   }
 }

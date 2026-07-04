@@ -89,12 +89,17 @@ input.onToggleGun = () => {
   canvas.classList.toggle('armed', weapon.armed);
   if (weapon.armed && targetMode) setTargetMode(null);  // gun & rockets/missiles are exclusive
   controls.panEnabled = !weapon.armed && !targetMode;   // right-drag fires instead of panning
-  if (!weapon.armed) weapon.setFiring(false);
+  if (!weapon.armed) { weapon.setFiring(false); mobileFiring = false; }
+  // Park the reticle at the current cursor (screen-centre on touch, where the
+  // gun fires from since there is no pointer to track).
+  if (weapon.armed) reticle.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+  mobile.setWeaponState(weapon.armed ? 'gun' : (targetMode || null));
 };
 
 // Cursor tracking + right-button firing (desktop)
 const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 let rightDown = false;
+let mobileFiring = false;   // gun trigger held via the on-screen FIRE button
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 const aimPoint = new THREE.Vector3();
@@ -155,6 +160,7 @@ function setTargetMode(mode) {
     mfdTop.textContent = mode === 'missiles' ? '◉ TADS — MISSILES' : '◉ TADS — ROCKETS';
     targets.lockNearest(heli.group.position);
   }
+  mobile.setWeaponState(mode || (weapon.armed ? 'gun' : null));
 }
 
 input.onToggleRockets = () => setTargetMode(targetMode === 'rockets' ? null : 'rockets');
@@ -172,6 +178,15 @@ function fireMunition(kind) {
 }
 input.onFireRockets = () => fireMunition('rockets');
 input.onFireMissiles = () => fireMunition('missiles');
+
+// Mobile FIRE button — context sensitive:
+//   gun armed  -> hold to fire the chain gun (toward screen-centre)
+//   rocket/msl -> loose one munition at the locked target per press
+input.onFireDown = () => {
+  if (weapon.armed) mobileFiring = true;
+  else if (targetMode) fireMunition(targetMode);
+};
+input.onFireUp = () => { mobileFiring = false; };
 
 // Flares (F)
 const flares = new Flares(scene);
@@ -328,7 +343,7 @@ function animate() {
   if (weapon.armed) {
     const ok = updateAim();
     weapon.setAim(aimPoint, ok);
-    weapon.setFiring(rightDown);
+    weapon.setFiring(rightDown || mobileFiring);
   } else {
     weapon.setFiring(false);
   }

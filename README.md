@@ -59,6 +59,14 @@ the folder and open it.
 - **Left virtual joystick** — cyclic (pitch & bank).
 - **▲ / ▼ buttons** — collective (climb / descend).
 - **↺ / ↻ buttons** — yaw.
+- **PWR** — power / throttle (hold to fly in the tilt direction).
+
+### Weapons — mobile
+- **GUN / RKT / MSL** (left edge) — select the chain gun, rockets or missiles.
+- **⟳** — cycle the locked target (rocket / missile modes).
+- **FIRE** (right edge) — hold to fire the gun (toward screen-centre), or tap to
+  loose a rocket / missile at the locked target.
+- **✦** — deploy flares.
 
 ### Camera — mouse
 - **Left-drag** — rotate the isometric view (orbit + tilt).

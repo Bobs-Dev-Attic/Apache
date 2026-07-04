@@ -181,7 +181,7 @@
           </ul>
         </div>
       </div>
-      <p class="help-mobile">On mobile: left thumb-stick tilts, hold <b>PWR</b> to fly in that direction; right buttons control collective &amp; yaw.</p>
+      <p class="help-mobile">On mobile: left thumb-stick tilts, hold <b>PWR</b> to fly in that direction; right buttons control collective &amp; yaw. Left-edge buttons select a weapon (<b>GUN / RKT / MSL</b>, <b>⟳</b> cycles targets); the right-edge <b>FIRE</b> button shoots (hold for the gun, tap for rockets/missiles) and <b>✦</b> drops flares.</p>
       <button id="btn-close-help" class="ui-btn wide">Got it</button>
     </div>
   </div>
@@ -204,6 +204,20 @@
         <button id="btn-yaw-left" class="pad-btn">↺<span>YAW L</span></button>
         <button id="btn-yaw-right" class="pad-btn">↻<span>YAW R</span></button>
       </div>
+    </div>
+
+    <!-- Weapon selector (left edge) -->
+    <div id="weapon-select">
+      <button id="btn-gun" class="wpn-btn">GUN<span>M230</span></button>
+      <button id="btn-rockets" class="wpn-btn">RKT<span>HYDRA</span></button>
+      <button id="btn-missiles" class="wpn-btn">MSL<span>HELLFIRE</span></button>
+      <button id="btn-cycle" class="wpn-btn ghost">⟳<span>CYCLE</span></button>
+    </div>
+
+    <!-- Fire + countermeasures (right edge) -->
+    <div id="weapon-fire">
+      <button id="btn-fire" class="fire-btn">FIRE</button>
+      <button id="btn-flares" class="wpn-btn ghost">✦<span>FLARE</span></button>
     </div>
   </div>
 

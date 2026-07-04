@@ -33,6 +33,9 @@ export class InputManager {
     this.onDeployFlares = null;
     this.onFireRockets = null;
     this.onFireMissiles = null;
+    // Mobile context-sensitive fire button (press / release)
+    this.onFireDown = null;
+    this.onFireUp = null;
 
     this._bindKeyboard();
   }

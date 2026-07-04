@@ -9,6 +9,20 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.7.0] — 2026-07-04
+### Added
+- **Mobile weapon controls.** Touch devices now get an on-screen weapon set:
+  left-edge **GUN / RKT / MSL** selectors plus **⟳** to cycle targets, and a
+  right-edge context-sensitive **FIRE** button (hold to fire the chain gun, tap
+  to loose a rocket or missile at the locked target) with a **✦ FLARE** button.
+  Selecting a weapon on either touch or keyboard keeps both in sync; FIRE and
+  CYCLE grey out until they apply.
+
+## [0.6.1] — 2026-07-04
+### Changed
+- **Instrument panel moved to the bottom-center** of the screen (was top-left),
+  clearing the top corners and sitting between the mobile flight controls.
+
 ## [0.6.0] — 2026-07-04
 ### Added
 - **Flares** on `F` — dispenses a burst of bright countermeasure particles that
