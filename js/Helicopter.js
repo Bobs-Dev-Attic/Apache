@@ -31,7 +31,7 @@ export class Helicopter {
 
     // Static visual yaw offset applied to the model only (does not affect the
     // flight/travel direction). Negative = clockwise viewed from above.
-    this.modelYaw = -Math.PI / 6;    // ~30° clockwise
+    this.modelYaw = -Math.PI / 4;    // ~45° clockwise
     this.group.position.set(0, this.altitude, 0);
 
     // rotor references for animation

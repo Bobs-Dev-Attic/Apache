@@ -9,6 +9,11 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.2.1] — 2026-07-04
+### Changed
+- Rotated the helicopter body a further 15° clockwise (now ~45° total), per
+  a top-down reference. Visual only; does not affect the flight direction.
+
 ## [0.2.0] — 2026-07-04
 ### Added
 - **Power / throttle control.** Cyclic now only tilts the helicopter; hold
