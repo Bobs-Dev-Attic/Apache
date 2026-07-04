@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#c2a06a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Apache — Isometric Helicopter Sim</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%9A%81%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./js/vendor/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <!-- Rotate-to-landscape prompt (mobile portrait) -->
+  <div id="rotate-prompt">
+    <div class="rotate-icon">📱↻</div>
+    <p>Rotate your device to landscape</p>
+  </div>
+
+  <!-- Heads-up display -->
+  <div id="hud">
+    <div class="hud-panel">
+      <div class="hud-row"><span class="hud-label">ALT</span><span id="hud-alt">0</span><span class="hud-unit">m</span></div>
+      <div class="hud-row"><span class="hud-label">SPD</span><span id="hud-spd">0</span><span class="hud-unit">km/h</span></div>
+      <div class="hud-row"><span class="hud-label">HDG</span><span id="hud-hdg">0</span><span class="hud-unit">°</span></div>
+      <div class="hud-row"><span class="hud-label">RTR</span><span id="hud-rtr">0</span><span class="hud-unit">%</span></div>
+    </div>
+  </div>
+
+  <!-- Top-right controls -->
+  <div id="top-controls">
+    <button id="btn-help" class="ui-btn" title="Controls">?</button>
+    <button id="btn-recenter" class="ui-btn" title="Recenter camera">⊕</button>
+  </div>
+
+  <!-- Help overlay -->
+  <div id="help-overlay" class="hidden">
+    <div class="help-card">
+      <h2>Apache — Controls</h2>
+      <div class="help-cols">
+        <div>
+          <h3>Flight (Keyboard)</h3>
+          <ul>
+            <li><b>W / S</b> — Pitch forward / back</li>
+            <li><b>A / D</b> — Bank left / right</li>
+            <li><b>Q / E</b> — Yaw (pedals) left / right</li>
+            <li><b>Shift</b> — Collective up (climb)</li>
+            <li><b>Ctrl</b> — Collective down (descend)</li>
+            <li><b>Space</b> — Hover assist (auto-level)</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Camera</h3>
+          <ul>
+            <li><b>Left-drag</b> — Rotate isometric view</li>
+            <li><b>Right-drag</b> — Pan</li>
+            <li><b>Wheel</b> — Zoom in / out</li>
+            <li><b>Touch:</b> 1 finger rotate, 2 finger pinch-zoom &amp; pan</li>
+            <li><b>F</b> — Follow helicopter on/off</li>
+          </ul>
+        </div>
+      </div>
+      <p class="help-mobile">On mobile: left thumb-stick flies, right buttons control collective &amp; yaw.</p>
+      <button id="btn-close-help" class="ui-btn wide">Got it</button>
+    </div>
+  </div>
+
+  <!-- Mobile on-screen flight controls -->
+  <div id="mobile-controls" class="hidden">
+    <!-- Left virtual joystick (cyclic: pitch/bank) -->
+    <div id="joystick" class="joystick">
+      <div id="joystick-knob" class="joystick-knob"></div>
+    </div>
+
+    <!-- Right button cluster -->
+    <div id="button-cluster">
+      <div class="btn-col">
+        <button id="btn-up" class="pad-btn">▲<span>CLIMB</span></button>
+        <button id="btn-down" class="pad-btn">▼<span>DESCEND</span></button>
+      </div>
+      <div class="btn-col">
+        <button id="btn-yaw-left" class="pad-btn">↺<span>YAW L</span></button>
+        <button id="btn-yaw-right" class="pad-btn">↻<span>YAW R</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Spinning up the rotors…</p>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
