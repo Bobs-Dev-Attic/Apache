@@ -9,6 +9,14 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.9.0] — 2026-07-04
+### Changed
+- **Power now comes from the cyclic.** The dedicated throttle is gone — the
+  **PWR button** (mobile) and **Space** (keyboard) no longer exist. Engine power
+  is derived from how far the cyclic is deflected, so tilting with the **left
+  stick / WASD** is what drives the aircraft in that direction. Neutral cyclic
+  settles to a hover. Collective (climb/descend) and yaw are unchanged.
+
 ## [0.8.0] — 2026-07-04
 ### Changed
 - **Twin sticks on mobile.** The climb/descend and yaw buttons are replaced by a

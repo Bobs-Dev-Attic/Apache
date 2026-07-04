@@ -27,7 +27,6 @@ export class MobileControls {
       this.input.mobileCollective = y;
     });
 
-    this._bindButtons();
     this._bindWeapons();
     this.setWeaponState(null);   // nothing selected at start
   }
@@ -142,12 +141,6 @@ export class MobileControls {
     el.addEventListener('mousedown', press);
     el.addEventListener('mouseup', release);
     el.addEventListener('mouseleave', release);
-  }
-
-  _bindButtons() {
-    // Climb/descend and yaw now live on the right collective stick; only the
-    // throttle remains a momentary button.
-    this._hold('btn-power', () => this.input.mobileThrottle = 1, () => this.input.mobileThrottle = 0);
   }
 
   _bindWeapons() {
