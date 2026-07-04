@@ -9,6 +9,16 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.14.0] — 2026-07-04
+### Added
+- **Firing arcs.** The nose must be pointed within **45°** of the target to fire
+  rockets, or **120°** to fire a missile; an off-axis shot is refused and briefly
+  flashes the sensor screen red.
+### Changed
+- **Missiles climb high again.** Restored (and steepened) the top-attack profile
+  so guided missiles gain real altitude — they throttle their sideways drift
+  while climbing, reach a high apex, then dive onto the target.
+
 ## [0.13.2] — 2026-07-04
 ### Changed
 - **Radar and sensor screen aligned to the right edge** of the screen (radar on
