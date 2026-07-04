@@ -213,8 +213,22 @@ html, body {
   bottom: calc(28px + env(safe-area-inset-bottom));
   right: calc(28px + env(safe-area-inset-right));
   display: flex;
+  align-items: flex-end;
   gap: 14px;
   z-index: 30;
+}
+.power-btn {
+  width: 88px !important;
+  height: 88px !important;
+  font-size: 20px !important;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-color: rgba(255, 207, 110, 0.5) !important;
+  background: radial-gradient(circle at 35% 30%, rgba(120,92,40,0.85), rgba(50,38,18,0.7)) !important;
+}
+.power-btn.active {
+  background: radial-gradient(circle at 35% 30%, var(--accent), #a9701f) !important;
+  color: #1a140b !important;
 }
 .btn-col { display: flex; flex-direction: column; gap: 14px; }
 .pad-btn {

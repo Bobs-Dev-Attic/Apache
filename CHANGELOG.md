@@ -9,6 +9,20 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.2.0] — 2026-07-04
+### Added
+- **Power / throttle control.** Cyclic now only tilts the helicopter; hold
+  power to actually fly it across the terrain in whatever direction it is
+  tilted, release to slow to a hover. Keyboard `Space`; a dedicated **PWR**
+  button on mobile.
+### Changed
+- Flight model reworked so the aircraft builds real momentum and cruises
+  (gentler horizontal drag, capped top speed) instead of barely drifting.
+- Altitude now auto-holds when the collective is neutral (previous hover-assist
+  key removed; hold Shift/Ctrl to climb/descend).
+- Increased the model's visual yaw offset to ~30° clockwise (still visual only;
+  does not affect the flight/travel direction).
+
 ## [0.1.1] — 2026-07-04
 ### Fixed
 - Cyclic axes were swapped: left/right (bank) input tilted the aircraft
