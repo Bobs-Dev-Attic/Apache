@@ -9,6 +9,17 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.10.0] — 2026-07-04
+### Added
+- **Swipe the sensor screen to cycle targets.** On mobile, swiping horizontally
+  across the always-on targeting screen cycles the locked target — right for the
+  next, left for the previous — mirroring the `Tab` key / `⟳` button. `cycle()`
+  now takes a direction.
+### Changed
+- **Mobile weapon pad relocated.** GUN / RKT / MSL / FLARE now sit in a **2×2
+  grid just above the left cyclic stick**, with a full-width **CYCLE** bar on
+  top (freeing the top-left corner).
+
 ## [0.9.0] — 2026-07-04
 ### Changed
 - **Power now comes from the cyclic.** The dedicated throttle is gone — the

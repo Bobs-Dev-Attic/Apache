@@ -118,11 +118,13 @@ export class Targets {
     this.locked = best;
   }
 
-  cycle() {
+  cycle(dir = 1) {
     if (this.aliveCount() === 0) { this.locked = -1; return; }
+    const n = this.list.length;
+    const step = dir < 0 ? -1 : 1;   // +1 next, -1 previous
     let i = this.locked;
-    for (let k = 0; k < this.list.length; k++) {
-      i = (i + 1) % this.list.length;
+    for (let k = 0; k < n; k++) {
+      i = (i + step + n) % n;
       if (this.list[i].alive) { this.locked = i; return; }
     }
   }

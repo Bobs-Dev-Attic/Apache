@@ -28,6 +28,7 @@ export class MobileControls {
     });
 
     this._bindWeapons();
+    this._bindTargetScreenSwipe();
     this.setWeaponState(null);   // nothing selected at start
   }
 
@@ -156,5 +157,43 @@ export class MobileControls {
     this._hold('btn-fire',
       () => this.input.onFireDown?.(),
       () => this.input.onFireUp?.());
+  }
+
+  /**
+   * Swiping horizontally across the always-on sensor screen cycles the locked
+   * target — swipe right for the next target, left for the previous one (the
+   * same action as the Tab key / CYCLE button).
+   */
+  _bindTargetScreenSwipe() {
+    const mfd = document.getElementById('mfd');
+    if (!mfd) return;
+    const H_MIN = 28;     // min horizontal travel to count as a swipe
+    let x0 = null, y0 = null;
+
+    const start = (cx, cy) => { x0 = cx; y0 = cy; };
+    const end = (cx, cy) => {
+      if (x0 === null) return;
+      const dx = cx - x0, dy = cy - y0;
+      x0 = y0 = null;
+      // horizontal-dominant swipe past the threshold
+      if (Math.abs(dx) > H_MIN && Math.abs(dx) > Math.abs(dy)) {
+        this.input.onSwipeTarget?.(dx > 0 ? 1 : -1);
+      }
+    };
+
+    mfd.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      start(t.clientX, t.clientY);
+      e.preventDefault();
+    }, { passive: false });
+    mfd.addEventListener('touchend', (e) => {
+      const t = e.changedTouches[0];
+      end(t.clientX, t.clientY);
+      e.preventDefault();
+    }, { passive: false });
+
+    // Mouse fallback for desktop testing / touch-emulation
+    mfd.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
+    mfd.addEventListener('mouseup', (e) => end(e.clientX, e.clientY));
   }
 }

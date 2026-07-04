@@ -30,6 +30,7 @@ export class InputManager {
     this.onToggleRockets = null;
     this.onToggleMissiles = null;
     this.onCycleTarget = null;
+    this.onSwipeTarget = null;   // (dir) => cycle target; dir +1 next / -1 prev
     this.onDeployFlares = null;
     this.onFireRockets = null;
     this.onFireMissiles = null;

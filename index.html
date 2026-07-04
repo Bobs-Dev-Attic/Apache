@@ -47,7 +47,7 @@
       <span id="mfd-tgt">NO TARGET</span>
       <span id="mfd-rng">--</span>
     </div>
-    <div class="mfd-hint">TAB cycle · RMB fire</div>
+    <div class="mfd-hint">TAB / swipe cycle · RMB fire</div>
   </div>
 
   <!-- Rotate-to-landscape prompt (mobile portrait) -->
@@ -180,7 +180,7 @@
           </ul>
         </div>
       </div>
-      <p class="help-mobile">On mobile: the <b>left stick</b> is the cyclic — tilt it to fly in that direction (the further you push, the more power); the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶). The top-left toolbar selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares, <b>⟳</b> cycles targets); the <b>FIRE</b> button shoots — hold for the gun, tap for rockets/missiles. The sensor screen under the radar is always live.</p>
+      <p class="help-mobile">On mobile: the <b>left stick</b> is the cyclic — tilt it to fly in that direction (the further you push, the more power); the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶). The <b>2×2 pad above the left stick</b> selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares); the <b>FIRE</b> button shoots — hold for the gun, tap for rockets/missiles. <b>Swipe the sensor screen</b> (under the radar) left / right — or tap <b>⟳</b> — to cycle targets.</p>
       <button id="btn-close-help" class="ui-btn wide">Got it</button>
     </div>
   </div>
@@ -204,13 +204,13 @@
       <button id="btn-fire" class="fire-btn">FIRE</button>
     </div>
 
-    <!-- Weapon selector (top-left toolbar) -->
+    <!-- Weapon selector: 2x2 grid above the left cyclic stick, CYCLE on top -->
     <div id="weapon-select">
+      <button id="btn-cycle" class="wpn-btn ghost">⟳<span>CYCLE</span></button>
       <button id="btn-gun" class="wpn-btn">GUN<span>M230</span></button>
       <button id="btn-rockets" class="wpn-btn">RKT<span>HYDRA</span></button>
       <button id="btn-missiles" class="wpn-btn">MSL<span>HELLFIRE</span></button>
       <button id="btn-flares" class="wpn-btn ghost">✦<span>FLARE</span></button>
-      <button id="btn-cycle" class="wpn-btn ghost">⟳<span>CYCLE</span></button>
     </div>
   </div>
 
