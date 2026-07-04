@@ -340,7 +340,7 @@ export class Targets {
     this.missiles.push({
       mesh, target, pos: fromPos.clone(), dir,
       speed: 14, maxSpeed: 92, turn: 3.2, trailT: 0,
-      phase: 'drop', phaseT: 0, cruise: 20, launchFwd,
+      phase: 'drop', phaseT: 0, cruise: 30, launchFwd,
     });
     return true;
   }
@@ -394,15 +394,19 @@ export class Targets {
         desired.set(m.launchFwd.x, -0.6, m.launchFwd.z);
         if (m.phaseT >= 0.28) { m.phase = 'climb'; m.phaseT = 0; }
       } else if (m.phase === 'climb') {
-        // Climb hard toward cruise altitude, drifting toward the target. Bias
-        // the vertical component so it gains height steeply first, then levels
-        // off over the target once high enough.
+        // Climb hard to a high cruise altitude. While still gaining height the
+        // horizontal pull is throttled so it goes steeply UP first; once high
+        // it levels off and cruises over the target before tipping into a dive.
         const up = (tpos.y + m.cruise) - m.pos.y;
-        if (up > 2) desired.set(dx, Math.max(up, horiz * 1.1 + 5), dz);
-        else desired.set(dx, up, dz);
+        if (up > 4) {
+          const hs = Math.min(1, 10 / (horiz + 0.01));  // limit sideways drift while climbing
+          desired.set(dx * hs, Math.max(up, 22), dz * hs);
+        } else {
+          desired.set(dx, up, dz);
+        }
         // tip over once at altitude and roughly over the target, if it has
         // clearly overshot the apex, or after a safety timeout
-        if ((up <= 3 && horiz < 16) || up < -5 || m.phaseT > 5) { m.phase = 'dive'; m.phaseT = 0; }
+        if ((up <= 3 && horiz < 16) || up < -3 || m.phaseT > 6) { m.phase = 'dive'; m.phaseT = 0; }
       } else { // dive straight down onto the target
         desired.subVectors(tpos, m.pos);
       }

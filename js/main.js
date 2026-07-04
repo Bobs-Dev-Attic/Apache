@@ -173,11 +173,34 @@ input.onCycleTarget = () => { if (targetMode) targets.cycle(); };
 // (right = next, left = previous), regardless of the selected weapon.
 input.onSwipeTarget = (dir) => targets.cycle(dir);
 
+// Firing arcs: the nose must be pointed within this many degrees of the target
+// to loose the munition — rockets are a tight forward cone, missiles are wide.
+const FIRE_ARC = { rockets: 45, missiles: 120 };
+const _fwd = new THREE.Vector3();
+const _to = new THREE.Vector3();
+
+/** Angle (degrees) between the aircraft's nose and the bearing to a target. */
+function offAxisDeg(tgt) {
+  _fwd.set(Math.cos(heli.heading), 0, -Math.sin(heli.heading));
+  _to.subVectors(tgt.pos, heli.group.position); _to.y = 0;
+  if (_to.lengthSq() < 1e-4) return 0;
+  _to.normalize();
+  return _fwd.angleTo(_to) * 180 / Math.PI;
+}
+
+// Briefly flash the sensor screen red when a shot is refused (off-axis).
+function flashNoFire() {
+  mfd.classList.add('no-fire');
+  clearTimeout(flashNoFire._t);
+  flashNoFire._t = setTimeout(() => mfd.classList.remove('no-fire'), 380);
+}
+
 // Dedicated fire buttons: 1 = rockets, 2 = missiles (at the locked target)
 function fireMunition(kind) {
   if (!targets.lockedTarget) targets.lockNearest(heli.group.position);
   const tgt = targets.lockedTarget;
   if (!tgt) return;
+  if (offAxisDeg(tgt) > FIRE_ARC[kind]) { flashNoFire(); return; }  // not facing enough
   const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6)); // wing pylon
   if (kind === 'missiles') targets.fireMissileAt(from, tgt);
   else targets.fireRocketAt(from, tgt);
@@ -200,14 +223,7 @@ input.onDeployFlares = () => flares.deploy(heli);
 
 // Fire the selected munition at the locked target on right-click (one per press)
 canvas.addEventListener('pointerdown', (e) => {
-  if (e.button === 2 && targetMode) {
-    const tgt = targets.lockedTarget;
-    if (tgt) {
-      const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6)); // wing pylon
-      if (targetMode === 'missiles') targets.fireMissileAt(from, tgt);
-      else targets.fireRocketAt(from, tgt);
-    }
-  }
+  if (e.button === 2 && targetMode) fireMunition(targetMode);
 });
 
 // Point the sensor camera from the nose sensor toward the locked target.

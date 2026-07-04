@@ -19,9 +19,9 @@ the folder and open it.
 - **Weapons** — M230 chain gun (fire at the cursor), Hydra rockets, and guided
   Hellfire missiles with a targeting sensor "video screen" (MFD): scatter of
   enemy tanks & technicals, target locking, Tab to cycle; rockets fly straight
-  to the locked target, missiles fly a top-attack profile. A hit throws debris
-  and dirt, blows parts off the vehicle, and leaves a burning hulk with a smoke
-  column and a scorched ground stain.
+  to the locked target (nose within 45°), missiles fly a high top-attack profile
+  (nose within 120°). A hit throws debris and dirt, blows parts off the vehicle,
+  and leaves a burning hulk with a smoke column and a scorched ground stain.
 - **Instruments** — a collapsible gauge cluster (artificial horizon, airspeed,
   altimeter, heading compass, rotor) that folds down to a mini readout.
 - **Radar** — a heading-up top-down scope showing target blips, range rings and
