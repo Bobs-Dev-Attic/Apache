@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { VERSION } from './version.js';
 import { IsometricControls } from './IsometricControls.js';
 import { Helicopter } from './Helicopter.js';
 import { Environment } from './Environment.js';
@@ -8,6 +9,11 @@ import { MobileControls } from './MobileControls.js';
 /* ------------------------------------------------------------------ *
  * Renderer & scene
  * ------------------------------------------------------------------ */
+// Stamp the current version onto the loading screen + title
+const versionEl = document.getElementById('version');
+if (versionEl) versionEl.textContent = 'v' + VERSION;
+document.title = `Apache v${VERSION} — Isometric Helicopter Sim`;
+
 const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));

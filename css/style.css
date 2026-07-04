@@ -60,6 +60,15 @@ html, body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 #loading p { letter-spacing: 1px; opacity: 0.8; }
+.version {
+  position: absolute;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- HUD ---------- */
 #hud {
