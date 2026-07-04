@@ -1,23 +1,32 @@
 /**
  * MobileControls
  * --------------
- * Wires up the on-screen virtual joystick (cyclic) and the button cluster
- * (collective + yaw) and writes into the shared InputManager.
+ * Wires up two on-screen virtual joysticks and the throttle / weapon buttons,
+ * writing into the shared InputManager.
  *
- * The joystick reports a normalised vector where up-on-screen is +y
- * (forward) and right-on-screen is +x. Buttons are momentary.
+ *   Left stick  (cyclic)     -> pitch / bank
+ *   Right stick (collective) -> ▲ climb / ▼ descend  +  ◀▶ yaw
+ *
+ * Each stick reports a normalised vector where up-on-screen is +y and
+ * right-on-screen is +x. Buttons are momentary.
  */
 export class MobileControls {
   constructor(input) {
     this.input = input;
     this.enabled = false;
-
-    this.joy = document.getElementById('joystick');
-    this.knob = document.getElementById('joystick-knob');
-    this._joyId = null;
     this._joyRadius = 46;
 
-    this._bindJoystick();
+    // Left cyclic stick -> pitch (y) / bank (x)
+    this._bindStick('joystick', 'joystick-knob', (x, y) => {
+      this.input.joy.x = x;
+      this.input.joy.y = y;
+    });
+    // Right collective stick -> climb/descend (y) + yaw (x)
+    this._bindStick('collective-stick', 'collective-knob', (x, y) => {
+      this.input.mobileYaw = x;
+      this.input.mobileCollective = y;
+    });
+
     this._bindButtons();
     this._bindWeapons();
     this.setWeaponState(null);   // nothing selected at start
@@ -42,64 +51,67 @@ export class MobileControls {
       mode !== 'rockets' && mode !== 'missiles');
   }
 
-  _center() {
-    const r = this.joy.getBoundingClientRect();
-    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-  }
+  /**
+   * Bind one virtual joystick. `write(x, y)` receives the normalised stick
+   * vector (-1..1) where up-on-screen is +y and right-on-screen is +x; it is
+   * called on every move and reset to (0, 0) on release. Each stick tracks its
+   * own touch identifier so the two can be used simultaneously.
+   */
+  _bindStick(joyId, knobId, write) {
+    const joy = document.getElementById(joyId);
+    const knob = document.getElementById(knobId);
+    const radius = this._joyRadius;
+    let id = null;
 
-  _bindJoystick() {
+    const center = () => {
+      const r = joy.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    };
+    const move = (cx, cy) => {
+      const c = center();
+      let dx = cx - c.x, dy = cy - c.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > radius) { dx = dx / dist * radius; dy = dy / dist * radius; }
+      knob.style.transform = `translate(${dx}px, ${dy}px)`;
+      write(dx / radius, -dy / radius);   // screen y inverted: up = +
+    };
+    const findTouch = (e) => {
+      if (!e.changedTouches) return e; // mouse
+      for (const t of e.touches) if (t.identifier === id) return t;
+      return null;
+    };
     const onDown = (e) => {
-      if (this._joyId !== null) return;
+      if (id !== null) return;
       const t = e.changedTouches ? e.changedTouches[0] : e;
-      this._joyId = e.changedTouches ? t.identifier : 'mouse';
-      this._moveKnob(t.clientX, t.clientY);
+      id = e.changedTouches ? t.identifier : 'mouse';
+      move(t.clientX, t.clientY);
       e.preventDefault();
     };
     const onMove = (e) => {
-      if (this._joyId === null) return;
-      const t = this._findTouch(e);
+      if (id === null) return;
+      const t = findTouch(e);
       if (!t) return;
-      this._moveKnob(t.clientX, t.clientY);
+      move(t.clientX, t.clientY);
       e.preventDefault();
     };
     const onUp = (e) => {
-      if (this._joyId === null) return;
-      const ended = e.changedTouches ? [...e.changedTouches].some(t => t.identifier === this._joyId) : true;
+      if (id === null) return;
+      const ended = e.changedTouches ? [...e.changedTouches].some(t => t.identifier === id) : true;
       if (!ended) return;
-      this._joyId = null;
-      this.input.joy.x = 0;
-      this.input.joy.y = 0;
-      this.knob.style.transform = 'translate(0px, 0px)';
+      id = null;
+      write(0, 0);
+      knob.style.transform = 'translate(0px, 0px)';
     };
 
-    this.joy.addEventListener('touchstart', onDown, { passive: false });
+    joy.addEventListener('touchstart', onDown, { passive: false });
     window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onUp, { passive: false });
     window.addEventListener('touchcancel', onUp, { passive: false });
 
     // Mouse fallback (useful for desktop testing / touch-emulation)
-    this.joy.addEventListener('mousedown', onDown);
-    window.addEventListener('mousemove', (e) => { if (this._joyId === 'mouse') onMove(e); });
-    window.addEventListener('mouseup', (e) => { if (this._joyId === 'mouse') onUp(e); });
-  }
-
-  _findTouch(e) {
-    if (!e.changedTouches) return e; // mouse
-    for (const t of e.touches) if (t.identifier === this._joyId) return t;
-    return null;
-  }
-
-  _moveKnob(cx, cy) {
-    const c = this._center();
-    let dx = cx - c.x;
-    let dy = cy - c.y;
-    const dist = Math.hypot(dx, dy);
-    const max = this._joyRadius;
-    if (dist > max) { dx = dx / dist * max; dy = dy / dist * max; }
-    this.knob.style.transform = `translate(${dx}px, ${dy}px)`;
-    // normalise; screen y is inverted (up = forward)
-    this.input.joy.x = dx / max;
-    this.input.joy.y = -dy / max;
+    joy.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', (e) => { if (id === 'mouse') onMove(e); });
+    window.addEventListener('mouseup', (e) => { if (id === 'mouse') onUp(e); });
   }
 
   /** Momentary "hold" button: fires onStart on press, onEnd on release. */
@@ -133,11 +145,9 @@ export class MobileControls {
   }
 
   _bindButtons() {
-    this._hold('btn-power',     () => this.input.mobileThrottle = 1,    () => this.input.mobileThrottle = 0);
-    this._hold('btn-up',        () => this.input.mobileCollective = 1,  () => this.input.mobileCollective = 0);
-    this._hold('btn-down',      () => this.input.mobileCollective = -1, () => this.input.mobileCollective = 0);
-    this._hold('btn-yaw-left',  () => this.input.mobileYaw = -1,        () => this.input.mobileYaw = 0);
-    this._hold('btn-yaw-right', () => this.input.mobileYaw = 1,         () => this.input.mobileYaw = 0);
+    // Climb/descend and yaw now live on the right collective stick; only the
+    // throttle remains a momentary button.
+    this._hold('btn-power', () => this.input.mobileThrottle = 1, () => this.input.mobileThrottle = 0);
   }
 
   _bindWeapons() {

@@ -9,6 +9,18 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.8.0] — 2026-07-04
+### Changed
+- **Twin sticks on mobile.** The climb/descend and yaw buttons are replaced by a
+  second on-screen joystick on the right: push forward to climb, back to descend,
+  left/right to yaw. The left stick still handles cyclic (pitch/bank).
+- **Targeting sensor is always on** and now lives **under the radar** (top-right)
+  instead of appearing bottom-center only in a weapon mode. It auto-locks the
+  nearest target at start and keeps a live feed regardless of the armed weapon.
+- **FIRE moved above the PWR (throttle) button** on the right.
+- **FLARE moved next to the MSL selector** in the top-left weapon toolbar, which
+  is now a horizontal row (GUN · RKT · MSL · FLARE · CYCLE).
+
 ## [0.7.0] — 2026-07-04
 ### Added
 - **Mobile weapon controls.** Touch devices now get an on-screen weapon set:

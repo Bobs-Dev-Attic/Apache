@@ -28,8 +28,8 @@ the folder and open it.
   follows the aircraft.
 - **Multi-platform input**
   - **Desktop**: keyboard flight + mouse camera.
-  - **Mobile**: on-screen virtual joystick + buttons for flight, touch
-    gestures for the camera.
+  - **Mobile**: twin on-screen joysticks (cyclic + collective/yaw) plus a
+    weapon toolbar and throttle/fire buttons, touch gestures for the camera.
 - **Landscape-first** — a rotate prompt appears on portrait phones.
 - **HUD** — altitude, speed, heading, rotor %.
 
@@ -57,16 +57,17 @@ the folder and open it.
 
 ### Flight — mobile
 - **Left virtual joystick** — cyclic (pitch & bank).
-- **▲ / ▼ buttons** — collective (climb / descend).
-- **↺ / ↻ buttons** — yaw.
+- **Right virtual joystick** — collective & yaw: forward = climb, back =
+  descend, left / right = yaw.
 - **PWR** — power / throttle (hold to fly in the tilt direction).
 
 ### Weapons — mobile
-- **GUN / RKT / MSL** (left edge) — select the chain gun, rockets or missiles.
+- **GUN / RKT / MSL** (top-left toolbar) — select the chain gun, rockets or missiles.
+- **✦** — deploy flares (next to MSL).
 - **⟳** — cycle the locked target (rocket / missile modes).
-- **FIRE** (right edge) — hold to fire the gun (toward screen-centre), or tap to
+- **FIRE** (above PWR) — hold to fire the gun (toward screen-centre), or tap to
   loose a rocket / missile at the locked target.
-- **✦** — deploy flares.
+- The **targeting sensor screen** under the radar is always live.
 
 ### Camera — mouse
 - **Left-drag** — rotate the isometric view (orbit + tilt).

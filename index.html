@@ -32,8 +32,8 @@
     <span class="lb-corner bl"></span><span class="lb-corner br"></span>
   </div>
 
-  <!-- Rocket targeting sensor "video screen" (MFD) -->
-  <div id="mfd" class="hidden">
+  <!-- Rocket targeting sensor "video screen" (MFD) — always on, under the radar -->
+  <div id="mfd">
     <!-- the live sensor feed is rendered by WebGL into this rectangle;
          the framing graphics below sit on top of it -->
     <div class="mfd-scan"></div>
@@ -42,7 +42,7 @@
       <span class="mb bl"></span><span class="mb br"></span>
     </div>
     <div class="mfd-cross"></div>
-    <div class="mfd-top" id="mfd-top">◉ TADS — ROCKETS</div>
+    <div class="mfd-top" id="mfd-top">◉ TADS — SENSOR</div>
     <div class="mfd-bottom">
       <span id="mfd-tgt">NO TARGET</span>
       <span id="mfd-rng">--</span>
@@ -181,7 +181,7 @@
           </ul>
         </div>
       </div>
-      <p class="help-mobile">On mobile: left thumb-stick tilts, hold <b>PWR</b> to fly in that direction; right buttons control collective &amp; yaw. Left-edge buttons select a weapon (<b>GUN / RKT / MSL</b>, <b>⟳</b> cycles targets); the right-edge <b>FIRE</b> button shoots (hold for the gun, tap for rockets/missiles) and <b>✦</b> drops flares.</p>
+      <p class="help-mobile">On mobile: the <b>left stick</b> tilts (cyclic), the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶); hold <b>PWR</b> to fly in the tilt direction. The top-left toolbar selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares, <b>⟳</b> cycles targets); the <b>FIRE</b> button (above PWR) shoots — hold for the gun, tap for rockets/missiles. The sensor screen under the radar is always live.</p>
       <button id="btn-close-help" class="ui-btn wide">Got it</button>
     </div>
   </div>
@@ -191,33 +191,28 @@
     <!-- Left virtual joystick (cyclic: pitch/bank) -->
     <div id="joystick" class="joystick">
       <div id="joystick-knob" class="joystick-knob"></div>
+      <span class="joy-cap">CYCLIC</span>
     </div>
 
-    <!-- Right button cluster -->
-    <div id="button-cluster">
+    <!-- Right virtual joystick (collective: ▲climb/▼descend, ◀▶ yaw) -->
+    <div id="collective-stick" class="joystick">
+      <div id="collective-knob" class="joystick-knob"></div>
+      <span class="joy-cap">CLIMB · YAW</span>
+    </div>
+
+    <!-- Throttle + fire (right, above the collective stick) -->
+    <div id="right-buttons">
+      <button id="btn-fire" class="fire-btn">FIRE</button>
       <button id="btn-power" class="pad-btn power-btn">PWR<span>THROTTLE</span></button>
-      <div class="btn-col">
-        <button id="btn-up" class="pad-btn">▲<span>CLIMB</span></button>
-        <button id="btn-down" class="pad-btn">▼<span>DESCEND</span></button>
-      </div>
-      <div class="btn-col">
-        <button id="btn-yaw-left" class="pad-btn">↺<span>YAW L</span></button>
-        <button id="btn-yaw-right" class="pad-btn">↻<span>YAW R</span></button>
-      </div>
     </div>
 
-    <!-- Weapon selector (left edge) -->
+    <!-- Weapon selector (top-left toolbar) -->
     <div id="weapon-select">
       <button id="btn-gun" class="wpn-btn">GUN<span>M230</span></button>
       <button id="btn-rockets" class="wpn-btn">RKT<span>HYDRA</span></button>
       <button id="btn-missiles" class="wpn-btn">MSL<span>HELLFIRE</span></button>
-      <button id="btn-cycle" class="wpn-btn ghost">⟳<span>CYCLE</span></button>
-    </div>
-
-    <!-- Fire + countermeasures (right edge) -->
-    <div id="weapon-fire">
-      <button id="btn-fire" class="fire-btn">FIRE</button>
       <button id="btn-flares" class="wpn-btn ghost">✦<span>FLARE</span></button>
+      <button id="btn-cycle" class="wpn-btn ghost">⟳<span>CYCLE</span></button>
     </div>
   </div>
 
