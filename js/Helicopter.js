@@ -31,7 +31,9 @@ export class Helicopter {
 
     // Static visual yaw offset applied to the model only (does not affect the
     // flight/travel direction). Negative = clockwise viewed from above.
-    this.modelYaw = -Math.PI / 4;    // ~45° clockwise
+    // The body is now built square (fuselage aligned with the nose/tail axis),
+    // so no offset is needed — the nose points where the aircraft flies.
+    this.modelYaw = 0;
     this.group.position.set(0, this.altitude, 0);
 
     // rotor references for animation
@@ -77,9 +79,12 @@ export class Helicopter {
     this.body = body;
 
     // --- Main fuselage (tapered) ---
+    // Lay the hex prism horizontal along X (rotation.z), then spin it about its
+    // OWN long axis (rotation.x) to orient the flat faces. Using rotation.y here
+    // would instead yaw the whole fuselage ~30° off the nose/tail axis.
     const fuse = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.7, 5.4, 6), olive);
     fuse.rotation.z = Math.PI / 2;
-    fuse.rotation.y = Math.PI / 6;
+    fuse.rotation.x = Math.PI / 6;
     fuse.scale.set(1, 1.15, 1);
     fuse.position.set(0.2, 0, 0);
     body.add(fuse);
