@@ -169,6 +169,9 @@ function setTargetMode(mode) {
 input.onToggleRockets = () => setTargetMode(targetMode === 'rockets' ? null : 'rockets');
 input.onToggleMissiles = () => setTargetMode(targetMode === 'missiles' ? null : 'missiles');
 input.onCycleTarget = () => { if (targetMode) targets.cycle(); };
+// Swiping the always-on sensor screen cycles the locked target directly
+// (right = next, left = previous), regardless of the selected weapon.
+input.onSwipeTarget = (dir) => targets.cycle(dir);
 
 // Dedicated fire buttons: 1 = rockets, 2 = missiles (at the locked target)
 function fireMunition(kind) {

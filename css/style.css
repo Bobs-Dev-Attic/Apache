@@ -254,17 +254,25 @@ html, body {
 #mobile-controls.hidden { display: none; }
 
 /* ---------- Mobile weapon controls ---------- */
-/* Weapon selector: horizontal toolbar across the top-left. */
+/* Weapon selector: a 2x2 grid (GUN/RKT/MSL/FLARE) sitting just above the
+   left cyclic stick, with a full-width CYCLE bar on top. */
 #weapon-select {
   position: fixed;
-  left: calc(10px + env(safe-area-inset-left));
-  top: calc(10px + env(safe-area-inset-top));
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  left: calc(24px + env(safe-area-inset-left));
+  bottom: calc(168px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   gap: 10px;
   z-index: 30;
 }
+#btn-cycle {
+  grid-column: 1 / -1;
+  width: auto;
+  height: 44px;
+  flex-direction: row;
+  gap: 6px;
+}
+#btn-cycle span { margin-top: 0; }
 /* FIRE button, just inboard of the right collective stick. */
 #right-buttons {
   position: fixed;
@@ -312,7 +320,8 @@ html, body {
 @media (max-height: 430px) {
   .wpn-btn { width: 52px; height: 52px; font-size: 13px; }
   .fire-btn { width: 72px; height: 72px; font-size: 16px; }
-  #weapon-select { gap: 8px; }
+  #weapon-select { gap: 8px; bottom: calc(150px + env(safe-area-inset-bottom)); }
+  #btn-cycle { height: 38px; }
   #right-buttons { right: calc(160px + env(safe-area-inset-right)); gap: 10px; }
 }
 
@@ -367,7 +376,9 @@ html, body {
   right: calc(12px + env(safe-area-inset-right));
   width: 180px; height: 120px;
   z-index: 24;
-  pointer-events: none;
+  /* receives horizontal swipes to cycle the locked target */
+  pointer-events: auto;
+  touch-action: none;
   border: 2px solid rgba(120, 255, 150, 0.55);
   border-radius: 8px;
   box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 18px rgba(40, 220, 90, 0.25);

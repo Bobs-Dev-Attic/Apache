@@ -61,9 +61,10 @@ the folder and open it.
   descend, left / right = yaw.
 
 ### Weapons — mobile
-- **GUN / RKT / MSL** (top-left toolbar) — select the chain gun, rockets or missiles.
-- **✦** — deploy flares (next to MSL).
-- **⟳** — cycle the locked target (rocket / missile modes).
+- **GUN / RKT / MSL / ✦** — a 2×2 pad above the left stick: select the chain
+  gun, rockets or missiles, or deploy flares (**✦**).
+- **⟳ CYCLE** (bar above the pad) or **swipe the sensor screen** left / right —
+  cycle the locked target (right = next, left = previous).
 - **FIRE** — hold to fire the gun (toward screen-centre), or tap to
   loose a rocket / missile at the locked target.
 - The **targeting sensor screen** under the radar is always live.
