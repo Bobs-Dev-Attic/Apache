@@ -9,6 +9,11 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.14.1] — 2026-07-04
+### Changed
+- **Default camera view is now REAR** (chase-from-behind, heading-tracking)
+  instead of the isometric overview.
+
 ## [0.14.0] — 2026-07-04
 ### Added
 - **Firing arcs.** The nose must be pointed within **45°** of the target to fire
