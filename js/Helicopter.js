@@ -27,6 +27,10 @@ export class Helicopter {
     this.rotorSpeed = 0;              // 0..1 spool
     this.targetRotor = 1;
     this.altitude = 12;
+
+    // Static visual yaw offset applied to the model only (does not affect the
+    // flight/travel direction). Negative = clockwise viewed from above.
+    this.modelYaw = -Math.PI / 12;   // ~15° clockwise
     this.group.position.set(0, this.altitude, 0);
 
     // rotor references for animation
@@ -59,8 +63,16 @@ export class Helicopter {
     const glass = this._mat(GLASS, { roughness: 0.25, metalness: 0.4 });
     const metal = this._mat(METAL, { metalness: 0.55, roughness: 0.5 });
 
+    // group      -> heading (yaw) + world position
+    //   attitude -> pitch & roll (flight attitude)
+    //     body   -> static model-yaw offset; holds all the meshes
+    const attitude = new THREE.Group();
+    this.group.add(attitude);
+    this.attitude = attitude;
+
     const body = new THREE.Group();
-    this.group.add(body);
+    body.rotation.y = this.modelYaw;
+    attitude.add(body);
     this.body = body;
 
     // --- Main fuselage (tapered) ---
@@ -312,9 +324,14 @@ export class Helicopter {
     }
     this.altitude = this.group.position.y - groundY;
 
-    // Apply attitude to the model
+    // Apply attitude to the model.
+    // Body local frame: +X = nose (forward), +Z = right (lateral), +Y = up.
+    // Pitch (nose up/down) rotates about the lateral (Z) axis; roll/bank
+    // rotates about the longitudinal (X) axis. A subtle idle bob is folded
+    // in as a pitch offset while grounded & spooling.
+    const bob = powered ? 0 : Math.sin(performance.now() * 0.002) * 0.02;
     this.group.rotation.set(0, this.heading, 0);
-    this.body.rotation.set(this.pitch, 0, this.bank);
+    this.attitude.rotation.set(-this.bank, 0, -this.pitch + bob);
 
     // Animate rotors
     const rpm = 42 * this.rotorSpeed;
@@ -324,11 +341,6 @@ export class Helicopter {
     // Blur the disc at speed
     if (this.rotorDisc) {
       this.rotorDisc.material.opacity = THREE.MathUtils.clamp(this.rotorSpeed - 0.3, 0, 1) * 0.28;
-    }
-
-    // Subtle idle bob when grounded & spooling
-    if (!powered) {
-      this.body.rotation.x += Math.sin(performance.now() * 0.002) * 0.001;
     }
   }
 
