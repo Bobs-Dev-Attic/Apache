@@ -61,8 +61,8 @@ export class InputManager {
     let roll = this._kb('d', 'arrowright') - this._kb('a', 'arrowleft');
     // Yaw: E right, Q left
     let yaw = this._kb('e') - this._kb('q');
-    // Collective: Shift up, Ctrl down
-    let collective = this._kb('shift') - this._kb('control');
+    // Collective: C / Shift up, Z / Ctrl down
+    let collective = this._kb('c', 'shift') - this._kb('z', 'control');
     // Throttle / power: Space (keyboard) or the mobile PWR button
     let throttle = Math.max(this._kb(' '), this.mobileThrottle);
 

@@ -9,6 +9,11 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.2.4] — 2026-07-04
+### Added
+- `C` climbs and `Z` descends (collective), alongside the existing Shift/Ctrl.
+  Help overlay and README updated.
+
 ## [0.2.3] — 2026-07-04
 ### Fixed
 - Rotated the tail rotor 90° so its disc faces sideways (a proper anti-torque

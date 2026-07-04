@@ -33,9 +33,9 @@ the folder and open it.
 | `W` / `S` | Pitch forward / back (drift fwd / back) |
 | `A` / `D` | Bank left / right (drift left / right) |
 | `Q` / `E` | Yaw (pedals) left / right |
-| `Shift` | Collective up — climb |
-| `Ctrl` | Collective down — descend |
-| `Space` | Hover assist (auto-level + altitude hold) |
+| `C` / `Shift` | Collective up — climb |
+| `Z` / `Ctrl` | Collective down — descend |
+| `Space` | Power — fly in the tilt direction |
 | `F` | Toggle camera follow |
 | `H` / `?` | Toggle help |
 
