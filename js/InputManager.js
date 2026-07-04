@@ -4,10 +4,15 @@
  * Unifies keyboard and mobile on-screen controls into a single normalised
  * control vector consumed by the flight model each frame:
  *
- *   { collective, pitch, roll, yaw, hover }  (all -1..1 except hover:bool)
+ *   { collective, pitch, roll, yaw, throttle }  (all 0..1 or -1..1)
  *
- * Keyboard : W/S pitch, A/D roll, Q/E yaw, Shift/Ctrl collective, Space hover.
- * Mobile   : left virtual joystick -> pitch/roll, right buttons -> collective/yaw.
+ * Keyboard : W/S pitch, A/D roll, Q/E yaw, Shift/Ctrl collective, Space power.
+ * Mobile   : left virtual joystick -> pitch/roll, right buttons -> collective,
+ *            yaw, and the POWER (throttle) button.
+ *
+ * "throttle" is the engine power that drives the helicopter across the ground
+ * in whatever direction it is tilted — hold it to fly, release it to slow to
+ * a hover. Altitude auto-holds when the collective is neutral.
  */
 export class InputManager {
   constructor() {
@@ -17,6 +22,7 @@ export class InputManager {
     this.joy = { x: 0, y: 0 };        // -1..1, y+ = up on screen
     this.mobileCollective = 0;         // -1 / 0 / +1
     this.mobileYaw = 0;                // -1 / 0 / +1
+    this.mobileThrottle = 0;           // 0 / 1
 
     this.onToggleFollow = null;
     this.onToggleHelp = null;
@@ -57,7 +63,8 @@ export class InputManager {
     let yaw = this._kb('e') - this._kb('q');
     // Collective: Shift up, Ctrl down
     let collective = this._kb('shift') - this._kb('control');
-    const hoverKey = this.keys.has(' ');
+    // Throttle / power: Space (keyboard) or the mobile PWR button
+    let throttle = Math.max(this._kb(' '), this.mobileThrottle);
 
     // Fold in mobile joystick (y up on screen -> forward pitch)
     pitch += this.joy.y;
@@ -72,7 +79,7 @@ export class InputManager {
       roll: clamp(roll),
       yaw: clamp(yaw),
       collective: clamp(collective),
-      hover: hoverKey,
+      throttle: Math.max(0, Math.min(1, throttle)),
     };
   }
 }

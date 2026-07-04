@@ -8,4 +8,4 @@
  *   MINOR — new features / content
  *   MAJOR — large / breaking overhauls
  */
-export const VERSION = '0.1.1';
+export const VERSION = '0.2.0';

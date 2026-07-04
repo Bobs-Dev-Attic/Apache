@@ -26,11 +26,12 @@ export class Helicopter {
     this.bank = 0;                    // roll (visual + drift)
     this.rotorSpeed = 0;              // 0..1 spool
     this.targetRotor = 1;
+    this.throttle = 0;                // 0..1 engine power (drives movement)
     this.altitude = 12;
 
     // Static visual yaw offset applied to the model only (does not affect the
     // flight/travel direction). Negative = clockwise viewed from above.
-    this.modelYaw = -Math.PI / 12;   // ~15° clockwise
+    this.modelYaw = -Math.PI / 6;    // ~30° clockwise
     this.group.position.set(0, this.altitude, 0);
 
     // rotor references for animation
@@ -263,13 +264,9 @@ export class Helicopter {
 
     // Attitude target from cyclic
     const maxTilt = 0.42;
-    let targetPitch = ctl.pitch * maxTilt;
-    let targetBank = -ctl.roll * maxTilt;
-
-    if (ctl.hover) {
-      targetPitch = 0;
-      targetBank = 0;
-    }
+    const targetPitch = ctl.pitch * maxTilt;
+    const targetBank = -ctl.roll * maxTilt;
+    this.throttle = ctl.throttle;
 
     // Smooth attitude
     this.pitch += (targetPitch - this.pitch) * Math.min(1, dt * 4);
@@ -279,34 +276,49 @@ export class Helicopter {
     this.heading -= ctl.yaw * 1.6 * dt * authority;
 
     // --- Translation ---
-    // Forward direction from heading
+    // Forward / right directions from heading
     const fwd = new THREE.Vector3(Math.cos(this.heading), 0, -Math.sin(this.heading));
     const right = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
 
-    // Cyclic tilt -> horizontal acceleration
-    const accel = new THREE.Vector3();
-    accel.addScaledVector(fwd, this.pitch * 14 * authority);
-    accel.addScaledVector(right, this.bank * -14 * authority);
+    // Engine power drives the helicopter in whatever direction it is tilted.
+    // A little always leaks through so a tilt nudges it; the throttle multiplies
+    // it up to a proper cruise.
+    const passiveGain = 2.5;
+    const powerGain = 34;
+    const moveGain = (passiveGain + ctl.throttle * powerGain) * authority;
 
-    // Vertical: collective vs gravity, with hover auto-hold
+    const accel = new THREE.Vector3();
+    accel.addScaledVector(fwd, this.pitch * moveGain);
+    accel.addScaledVector(right, this.bank * -moveGain);
+
+    // Vertical: collective climbs/descends; when neutral the altitude auto-holds.
     const gravity = 9.8;
     let lift;
-    if (ctl.hover && powered) {
-      // hold altitude: PD toward zero vertical velocity
-      lift = gravity - this.velocity.y * 3.0;
+    if (!powered) {
+      lift = 0; // no rotor -> fall
+    } else if (ctl.collective === 0) {
+      lift = gravity - this.velocity.y * 3.0; // hold current altitude
     } else {
       lift = gravity + ctl.collective * 16 * authority;
-      if (!powered) lift = 0; // no power -> fall
     }
     accel.y = lift - gravity;
 
     // Integrate velocity with drag
     this.velocity.addScaledVector(accel, dt);
-    const dragXZ = Math.pow(0.12, dt); // strong horizontal damping (arcade feel)
+    const dragXZ = Math.pow(0.6, dt); // gentle horizontal damping -> real momentum
     const dragY = Math.pow(0.5, dt);
     this.velocity.x *= dragXZ;
     this.velocity.z *= dragXZ;
     this.velocity.y *= dragY;
+
+    // Cap horizontal cruise speed
+    const maxHoriz = 42;
+    const hs = Math.hypot(this.velocity.x, this.velocity.z);
+    if (hs > maxHoriz) {
+      const s = maxHoriz / hs;
+      this.velocity.x *= s;
+      this.velocity.z *= s;
+    }
 
     // Integrate position
     this.group.position.addScaledVector(this.velocity, dt);

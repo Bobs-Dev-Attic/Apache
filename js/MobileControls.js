@@ -99,6 +99,7 @@ export class MobileControls {
       el.addEventListener('mouseleave', (e) => { if (el.classList.contains('active')) end(e); });
     };
 
+    hold('btn-power',     () => this.input.mobileThrottle = 1,    () => this.input.mobileThrottle = 0);
     hold('btn-up',        () => this.input.mobileCollective = 1,  () => this.input.mobileCollective = 0);
     hold('btn-down',      () => this.input.mobileCollective = -1, () => this.input.mobileCollective = 0);
     hold('btn-yaw-left',  () => this.input.mobileYaw = -1,        () => this.input.mobileYaw = 0);
