@@ -6,6 +6,7 @@ import { Environment } from './Environment.js';
 import { InputManager } from './InputManager.js';
 import { MobileControls } from './MobileControls.js';
 import { Weapon } from './Weapon.js';
+import { Targets } from './Targets.js';
 
 /* ------------------------------------------------------------------ *
  * Renderer & scene
@@ -83,7 +84,8 @@ input.onToggleGun = () => {
   gunStatus.classList.toggle('hidden', !weapon.armed);
   reticle.classList.toggle('hidden', !weapon.armed);
   canvas.classList.toggle('armed', weapon.armed);
-  controls.panEnabled = !weapon.armed;   // right-drag fires instead of panning
+  if (weapon.armed && rocketMode) setRocketMode(false); // gun & rockets are exclusive
+  controls.panEnabled = !weapon.armed && !rocketMode;    // right-drag fires instead of panning
   if (!weapon.armed) weapon.setFiring(false);
 };
 
@@ -118,6 +120,107 @@ function updateAim() {
   }
   raycaster.ray.at(300, aimPoint);
   return true;
+}
+
+/* ------------------------------------------------------------------ *
+ * Rockets + targeting sensor (MFD "video screen")
+ * ------------------------------------------------------------------ */
+const targets = new Targets(scene, env);
+
+// A narrow-FOV sensor camera whose feed is rendered into the MFD rectangle.
+const sensorCam = new THREE.PerspectiveCamera(16, 300 / 188, 0.5, 1200);
+
+const mfd = document.getElementById('mfd');
+const mfdTgt = document.getElementById('mfd-tgt');
+const mfdRng = document.getElementById('mfd-rng');
+const lockBox = document.getElementById('lock-box');
+
+let rocketMode = false;
+const _v = new THREE.Vector3();
+const _muzzleL = new THREE.Vector3();
+
+function setRocketMode(on) {
+  rocketMode = on;
+  mfd.classList.toggle('hidden', !on);
+  lockBox.classList.toggle('hidden', !on);
+  controls.panEnabled = !on && !weapon.armed;
+  if (on) {
+    // arming rockets stows the gun
+    if (weapon.armed) input.onToggleGun();
+    targets.lockNearest(heli.group.position);
+  }
+}
+
+input.onToggleRockets = () => setRocketMode(!rocketMode);
+input.onCycleTarget = () => { if (rocketMode) targets.cycle(); };
+
+// Fire a rocket at the locked target on right-click (single shot per press)
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button === 2 && rocketMode) {
+    const tgt = targets.lockedTarget;
+    if (tgt) {
+      // launch from a wing pylon (roughly under the stub wing)
+      const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6));
+      targets.fireRocketAt(from, tgt);
+    }
+  }
+});
+
+// Point the sensor camera from the nose sensor toward the locked target.
+function updateSensor() {
+  const tgt = targets.lockedTarget;
+  const eye = heli.body.localToWorld(_muzzleL.set(3.35, -0.5, 0));
+  sensorCam.position.copy(eye);
+  if (tgt) {
+    sensorCam.lookAt(tgt.pos);
+  } else {
+    // look forward along the nose if nothing is locked
+    heli.body.localToWorld(_v.set(20, -2, 0));
+    sensorCam.lookAt(_v);
+  }
+  sensorCam.updateMatrixWorld();
+}
+
+// Update MFD text + world-space lock box each frame
+function updateTargetingHud() {
+  const tgt = targets.lockedTarget;
+  if (tgt) {
+    mfd.classList.remove('no-target');
+    const rng = heli.group.position.distanceTo(tgt.pos);
+    mfdTgt.textContent = `TGT ${targets.lockedOrdinal()}/${targets.aliveCount()} ${tgt.name}`;
+    mfdRng.textContent = `${rng.toFixed(0)}m`;
+    // project target to screen for the lock box
+    _v.copy(tgt.pos).project(camera);
+    if (_v.z < 1) {
+      const sx = (_v.x * 0.5 + 0.5) * window.innerWidth;
+      const sy = (-_v.y * 0.5 + 0.5) * window.innerHeight;
+      lockBox.style.display = 'block';
+      lockBox.style.transform = `translate(${sx}px, ${sy}px)`;
+    } else {
+      lockBox.style.display = 'none';
+    }
+  } else {
+    mfd.classList.add('no-target');
+    mfdTgt.textContent = 'NO TARGET';
+    mfdRng.textContent = '--';
+    lockBox.style.display = 'none';
+  }
+}
+
+// Render the sensor feed into the MFD rectangle (WebGL scissor pass)
+function renderSensor() {
+  // setViewport/setScissor take CSS pixels; the renderer applies pixelRatio.
+  const r = mfd.getBoundingClientRect();
+  const x = r.left;
+  const y = window.innerHeight - r.bottom; // GL origin is bottom-left
+  sensorCam.aspect = r.width / r.height;
+  sensorCam.updateProjectionMatrix();
+  renderer.setScissorTest(true);
+  renderer.setViewport(x, y, r.width, r.height);
+  renderer.setScissor(x, y, r.width, r.height);
+  renderer.render(scene, sensorCam);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
 }
 
 /* ------------------------------------------------------------------ *
@@ -209,6 +312,13 @@ function animate() {
   }
   weapon.update(dt);
 
+  // Rockets + targeting
+  targets.update(dt, () => { if (rocketMode) targets.cycle(); }); // auto-lock next on kill
+  if (rocketMode) {
+    updateSensor();
+    updateTargetingHud();
+  }
+
   // HUD
   hudAlt.textContent = Math.max(0, heli.altitude).toFixed(0);
   hudSpd.textContent = heli.speedKmh.toFixed(0);
@@ -217,9 +327,12 @@ function animate() {
 
   renderer.render(scene, camera);
 
+  // The sensor "video screen" is a second render into the MFD rectangle
+  if (rocketMode) renderSensor();
+
   if (firstFrame) { firstFrame = false; hideLoading(); }
 }
 animate();
 
 // Expose for debugging in the console
-window.__sim = { scene, camera, heli, env, controls, input, weapon };
+window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, get rocketMode() { return rocketMode; } };

@@ -228,6 +228,85 @@ html, body {
 }
 #scene.armed { cursor: crosshair; }
 
+/* ---------- Rocket targeting: MFD sensor screen + lock box ---------- */
+#mfd {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: 300px; height: 188px;
+  z-index: 24;
+  pointer-events: none;
+  border: 2px solid rgba(120, 255, 150, 0.55);
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.5), 0 0 18px rgba(40, 220, 90, 0.25);
+  /* transparent center so the WebGL sensor render shows through */
+  background: transparent;
+  overflow: hidden;
+  font-family: "Courier New", monospace;
+  color: #8dff9e;
+  text-shadow: 0 0 4px rgba(40, 220, 90, 0.7);
+}
+#mfd.hidden { display: none; }
+.mfd-scan {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,20,0,0.18) 2px 4px);
+  mix-blend-mode: multiply;
+}
+.mfd-brackets .mb {
+  position: absolute; width: 22px; height: 22px;
+  border: 2px solid rgba(140, 255, 160, 0.85);
+}
+.mfd-brackets .tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+.mfd-brackets .tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; }
+.mfd-brackets .bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; }
+.mfd-brackets .br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+.mfd-cross {
+  position: absolute; left: 50%; top: 50%;
+  width: 34px; height: 34px; margin: -17px 0 0 -17px;
+  background:
+    linear-gradient(rgba(255,80,60,0.9), rgba(255,80,60,0.9)) 50% 0/2px 12px no-repeat,
+    linear-gradient(rgba(255,80,60,0.9), rgba(255,80,60,0.9)) 50% 100%/2px 12px no-repeat,
+    linear-gradient(rgba(255,80,60,0.9), rgba(255,80,60,0.9)) 0 50%/12px 2px no-repeat,
+    linear-gradient(rgba(255,80,60,0.9), rgba(255,80,60,0.9)) 100% 50%/12px 2px no-repeat;
+}
+.mfd-top {
+  position: absolute; top: 6px; left: 0; right: 0; text-align: center;
+  font-size: 10px; letter-spacing: 2px;
+}
+.mfd-bottom {
+  position: absolute; bottom: 6px; left: 10px; right: 10px;
+  display: flex; justify-content: space-between;
+  font-size: 12px; font-weight: 700; letter-spacing: 1px;
+}
+.mfd-hint {
+  position: absolute; bottom: 22px; left: 0; right: 0; text-align: center;
+  font-size: 9px; letter-spacing: 1px; opacity: 0.6;
+}
+#mfd.no-target { border-color: rgba(255,180,80,0.5); color: #ffcf8a; }
+#mfd.no-target .mfd-cross { opacity: 0.25; }
+
+#lock-box {
+  position: fixed; top: 0; left: 0;
+  width: 54px; height: 54px; margin: -27px 0 0 -27px;
+  z-index: 23; pointer-events: none;
+  will-change: transform;
+}
+#lock-box.hidden { display: none; }
+#lock-box .lb-corner {
+  position: absolute; width: 14px; height: 14px;
+  border: 2px solid rgba(255, 70, 55, 0.95);
+  box-shadow: 0 0 5px rgba(255, 50, 40, 0.6);
+}
+#lock-box .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; }
+#lock-box .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; }
+#lock-box .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
+#lock-box .br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
+
+@media (max-height: 430px) {
+  #mfd { width: 232px; height: 146px; }
+}
+
 .joystick {
   position: fixed;
   bottom: calc(28px + env(safe-area-inset-bottom));

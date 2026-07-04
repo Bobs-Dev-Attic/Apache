@@ -16,6 +16,10 @@ the folder and open it.
   landing gear. Rotors spin and blur up to speed.
 - **Low-poly desert** — procedurally displaced dune terrain, scattered rocks,
   saguaro cacti, distant mesas, a warm gradient sky, sun shadows and fog.
+- **Weapons** — M230 chain gun (fire at the cursor) and Hydra rockets with a
+  targeting sensor "video screen" (MFD): scatter of enemy tanks & technicals,
+  target locking, Tab to cycle, rockets that fly to the locked target and
+  detonate.
 - **Rotatable isometric camera** — orbit, tilt, zoom and pan; optionally
   follows the aircraft.
 - **Multi-platform input**
@@ -37,7 +41,9 @@ the folder and open it.
 | `Z` / `Ctrl` | Collective down — descend |
 | `Space` | Power — fly in the tilt direction |
 | `G` | Arm / stow the main gun (M230) |
-| Right-click | Fire the gun at the cursor (while armed) |
+| `R` | Rocket mode + targeting sensor screen |
+| `Tab` | Cycle locked target (rocket mode) |
+| Right-click | Fire the armed weapon (gun → cursor, rockets → locked target) |
 | `F` | Toggle camera follow |
 | `H` / `?` | Toggle help |
 

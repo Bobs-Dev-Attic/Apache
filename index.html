@@ -26,6 +26,30 @@
     <div class="reticle-dot"></div>
   </div>
 
+  <!-- World-space lock box over the locked target (rocket mode) -->
+  <div id="lock-box" class="hidden">
+    <span class="lb-corner tl"></span><span class="lb-corner tr"></span>
+    <span class="lb-corner bl"></span><span class="lb-corner br"></span>
+  </div>
+
+  <!-- Rocket targeting sensor "video screen" (MFD) -->
+  <div id="mfd" class="hidden">
+    <!-- the live sensor feed is rendered by WebGL into this rectangle;
+         the framing graphics below sit on top of it -->
+    <div class="mfd-scan"></div>
+    <div class="mfd-brackets">
+      <span class="mb tl"></span><span class="mb tr"></span>
+      <span class="mb bl"></span><span class="mb br"></span>
+    </div>
+    <div class="mfd-cross"></div>
+    <div class="mfd-top">◉ TADS — ROCKETS</div>
+    <div class="mfd-bottom">
+      <span id="mfd-tgt">NO TARGET</span>
+      <span id="mfd-rng">--</span>
+    </div>
+    <div class="mfd-hint">TAB cycle · RMB fire</div>
+  </div>
+
   <!-- Rotate-to-landscape prompt (mobile portrait) -->
   <div id="rotate-prompt">
     <div class="rotate-icon">📱↻</div>
@@ -64,6 +88,7 @@
             <li><b>C / Shift</b> — Collective up (climb)</li>
             <li><b>Z / Ctrl</b> — Collective down (descend)</li>
             <li><b>G</b> — Arm main gun; <b>right-click</b> to fire at cursor</li>
+            <li><b>R</b> — Rocket mode + sensor screen; <b>Tab</b> cycles targets, <b>right-click</b> fires</li>
           </ul>
         </div>
         <div>

@@ -27,6 +27,8 @@ export class InputManager {
     this.onToggleFollow = null;
     this.onToggleHelp = null;
     this.onToggleGun = null;
+    this.onToggleRockets = null;
+    this.onCycleTarget = null;
 
     this._bindKeyboard();
   }
@@ -34,11 +36,13 @@ export class InputManager {
   _bindKeyboard() {
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
-      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) {
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'tab'].includes(k)) {
         e.preventDefault();
       }
       if (k === 'f' && !e.repeat) this.onToggleFollow?.();
       if (k === 'g' && !e.repeat) this.onToggleGun?.();
+      if (k === 'r' && !e.repeat) this.onToggleRockets?.();
+      if (k === 'tab' && !e.repeat) this.onCycleTarget?.();
       if ((k === 'h' || k === '?') && !e.repeat) this.onToggleHelp?.();
       this.keys.add(k);
       if (e.key === 'Shift') this.keys.add('shift');

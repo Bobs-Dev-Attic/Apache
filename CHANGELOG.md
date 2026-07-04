@@ -9,6 +9,19 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.4.0] — 2026-07-04
+### Added
+- **Rockets + targeting sensor.** Press `R` to enter rocket mode: a green
+  "TADS" sensor **video screen** (MFD) appears at the bottom, showing a live
+  zoomed camera feed of the locked target. **Tab** cycles through targets;
+  a world-space lock box tracks the target in the main view.
+- **Right-click** fires a Hydra rocket at the locked target; it flies in and
+  detonates with a fireball + smoke, destroying the target and auto-locking the
+  next one.
+- Enemy ground targets scattered across the desert (low-poly T-72 tanks and
+  technicals) with range readout (`TGT n/total`, metres).
+- Gun and rockets are mutually exclusive weapon modes.
+
 ## [0.3.0] — 2026-07-04
 ### Added
 - **M230 chain gun.** Press `G` to arm the main gun; while armed, hold the
