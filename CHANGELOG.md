@@ -9,6 +9,17 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.3.0] — 2026-07-04
+### Added
+- **M230 chain gun.** Press `G` to arm the main gun; while armed, hold the
+  **right mouse button** to fire at the cursor location. The cursor is
+  projected onto the terrain, the nose gun slews to aim, and it fires tracer
+  rounds at machine-gun cadence with a muzzle flash and dust impacts.
+- Gun model (housing + barrel) under the nose, a "GUN ARMED" HUD indicator and
+  a targeting reticle that follows the cursor.
+- While the gun is armed, right-drag fires instead of panning the camera
+  (left-drag still rotates, wheel still zooms).
+
 ## [0.2.4] — 2026-07-04
 ### Added
 - `C` climbs and `Z` descends (collective), alongside the existing Shift/Ctrl.

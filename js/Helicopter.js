@@ -106,6 +106,22 @@ export class Helicopter {
     sensor.position.set(3.35, -0.5, 0);
     body.add(sensor);
 
+    // --- M230 chain gun (slews to aim; muzzle is the tracer origin) ---
+    const gunMount = new THREE.Group();
+    gunMount.position.set(2.3, -0.95, 0);
+    const gunHousing = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.34), metal);
+    gunMount.add(gunHousing);
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 1.3, 6), metal);
+    barrel.rotation.z = Math.PI / 2;
+    barrel.position.set(0.85, 0, 0);
+    gunMount.add(barrel);
+    const muzzle = new THREE.Object3D();
+    muzzle.position.set(1.5, 0, 0);
+    gunMount.add(muzzle);
+    body.add(gunMount);
+    this.gunMount = gunMount;   // slewed by the weapon system
+    this.gunMuzzle = muzzle;    // world position = tracer spawn point
+
     // --- Tandem cockpit canopy (stepped, two seats) ---
     const canopyF = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.7, 1.05), glass);
     canopyF.position.set(1.9, 0.55, 0);

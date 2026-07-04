@@ -46,6 +46,10 @@ export class IsometricControls {
     this._polTarget = this.polar;
     this._zoomTarget = camera.zoom;
 
+    // When false, the right/middle mouse button no longer pans (e.g. while the
+    // gun is armed and right-click is used to fire). Touch pinch-pan is unaffected.
+    this.panEnabled = true;
+
     // Interaction bookkeeping
     this._pointers = new Map();
     this._lastSingle = null;
@@ -104,10 +108,10 @@ export class IsometricControls {
       const dy = e.clientY - this._lastSingle.y;
       this._lastSingle = { x: e.clientX, y: e.clientY };
 
-      // Right / middle mouse button pans, left rotates.
-      if (this._button === 2 || this._button === 1) {
+      // Right / middle mouse button pans (unless disabled), left rotates.
+      if ((this._button === 2 || this._button === 1) && this.panEnabled) {
         this._pan(dx, dy);
-      } else {
+      } else if (this._button !== 2 && this._button !== 1) {
         this._rotate(dx, dy);
       }
     } else if (this._pointers.size === 2) {

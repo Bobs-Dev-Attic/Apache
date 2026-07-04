@@ -26,6 +26,7 @@ export class InputManager {
 
     this.onToggleFollow = null;
     this.onToggleHelp = null;
+    this.onToggleGun = null;
 
     this._bindKeyboard();
   }
@@ -37,6 +38,7 @@ export class InputManager {
         e.preventDefault();
       }
       if (k === 'f' && !e.repeat) this.onToggleFollow?.();
+      if (k === 'g' && !e.repeat) this.onToggleGun?.();
       if ((k === 'h' || k === '?') && !e.repeat) this.onToggleHelp?.();
       this.keys.add(k);
       if (e.key === 'Shift') this.keys.add('shift');

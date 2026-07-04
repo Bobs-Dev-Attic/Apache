@@ -20,6 +20,12 @@
 <body>
   <canvas id="scene"></canvas>
 
+  <!-- Gun aiming reticle (shown while the gun is armed) -->
+  <div id="reticle" class="hidden">
+    <div class="reticle-ring"></div>
+    <div class="reticle-dot"></div>
+  </div>
+
   <!-- Rotate-to-landscape prompt (mobile portrait) -->
   <div id="rotate-prompt">
     <div class="rotate-icon">📱↻</div>
@@ -34,6 +40,7 @@
       <div class="hud-row"><span class="hud-label">HDG</span><span id="hud-hdg">0</span><span class="hud-unit">°</span></div>
       <div class="hud-row"><span class="hud-label">RTR</span><span id="hud-rtr">0</span><span class="hud-unit">%</span></div>
     </div>
+    <div id="gun-status" class="gun-status hidden">● GUN ARMED</div>
   </div>
 
   <!-- Top-right controls -->
@@ -56,6 +63,7 @@
             <li><b>Q / E</b> — Yaw (pedals) left / right</li>
             <li><b>C / Shift</b> — Collective up (climb)</li>
             <li><b>Z / Ctrl</b> — Collective down (descend)</li>
+            <li><b>G</b> — Arm main gun; <b>right-click</b> to fire at cursor</li>
           </ul>
         </div>
         <div>
