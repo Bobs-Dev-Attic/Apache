@@ -1,0 +1,78 @@
+/**
+ * InputManager
+ * ------------
+ * Unifies keyboard and mobile on-screen controls into a single normalised
+ * control vector consumed by the flight model each frame:
+ *
+ *   { collective, pitch, roll, yaw, hover }  (all -1..1 except hover:bool)
+ *
+ * Keyboard : W/S pitch, A/D roll, Q/E yaw, Shift/Ctrl collective, Space hover.
+ * Mobile   : left virtual joystick -> pitch/roll, right buttons -> collective/yaw.
+ */
+export class InputManager {
+  constructor() {
+    this.keys = new Set();
+
+    // Mobile analog/state
+    this.joy = { x: 0, y: 0 };        // -1..1, y+ = up on screen
+    this.mobileCollective = 0;         // -1 / 0 / +1
+    this.mobileYaw = 0;                // -1 / 0 / +1
+
+    this.onToggleFollow = null;
+    this.onToggleHelp = null;
+
+    this._bindKeyboard();
+  }
+
+  _bindKeyboard() {
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) {
+        e.preventDefault();
+      }
+      if (k === 'f' && !e.repeat) this.onToggleFollow?.();
+      if ((k === 'h' || k === '?') && !e.repeat) this.onToggleHelp?.();
+      this.keys.add(k);
+      if (e.key === 'Shift') this.keys.add('shift');
+      if (e.key === 'Control') this.keys.add('control');
+    });
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      this.keys.delete(k);
+      if (e.key === 'Shift') this.keys.delete('shift');
+      if (e.key === 'Control') this.keys.delete('control');
+    });
+    window.addEventListener('blur', () => this.keys.clear());
+  }
+
+  _kb(...names) { return names.some((n) => this.keys.has(n)) ? 1 : 0; }
+
+  /** Combine all sources into the control vector. */
+  sample() {
+    // Pitch: W / ArrowUp forward (nose down, drift fwd), S / ArrowDown back
+    let pitch = this._kb('w', 'arrowup') - this._kb('s', 'arrowdown');
+    // Roll: D right, A left
+    let roll = this._kb('d', 'arrowright') - this._kb('a', 'arrowleft');
+    // Yaw: E right, Q left
+    let yaw = this._kb('e') - this._kb('q');
+    // Collective: Shift up, Ctrl down
+    let collective = this._kb('shift') - this._kb('control');
+    const hoverKey = this.keys.has(' ');
+
+    // Fold in mobile joystick (y up on screen -> forward pitch)
+    pitch += this.joy.y;
+    roll += this.joy.x;
+    yaw += this.mobileYaw;
+    collective += this.mobileCollective;
+
+    // Clamp
+    const clamp = (v) => Math.max(-1, Math.min(1, v));
+    return {
+      pitch: clamp(pitch),
+      roll: clamp(roll),
+      yaw: clamp(yaw),
+      collective: clamp(collective),
+      hover: hoverKey,
+    };
+  }
+}
