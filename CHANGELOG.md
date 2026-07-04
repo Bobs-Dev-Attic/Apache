@@ -9,6 +9,11 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.13.1] — 2026-07-04
+### Changed
+- **Radar moved to the top-centre** of the screen, with the targeting sensor
+  screen (MFD) stacked directly below it (was top-right).
+
 ## [0.13.0] — 2026-07-04
 ### Added
 - **Destructible wrecks.** A rocket or missile hit now throws out dirt clods,

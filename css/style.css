@@ -153,8 +153,9 @@ html, body {
 /* ---------- Radar scope ---------- */
 #radar {
   position: fixed;
-  top: calc(64px + env(safe-area-inset-top));
-  right: calc(12px + env(safe-area-inset-right));
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 20;
   width: 180px; height: 180px;
   border-radius: 50%;
@@ -170,7 +171,7 @@ html, body {
   font-size: 9px; letter-spacing: 3px; color: rgba(140,255,158,0.7);
 }
 @media (max-height: 480px) {
-  #radar { width: 128px; height: 128px; top: calc(60px + env(safe-area-inset-top)); }
+  #radar { width: 128px; height: 128px; top: calc(10px + env(safe-area-inset-top)); }
   #radar canvas { width: 128px; height: 128px; }
   .gauge { width: 54px; height: 54px; }
   .gauge.rtr { width: 24px; height: 54px; }
@@ -389,11 +390,12 @@ html, body {
 #scene.armed { cursor: crosshair; }
 
 /* ---------- Rocket targeting: MFD sensor screen + lock box ---------- */
-/* Always-on sensor feed, parked directly under the radar (top-right). */
+/* Always-on sensor feed, parked directly under the radar (top-centre). */
 #mfd {
   position: fixed;
-  top: calc(252px + env(safe-area-inset-top));
-  right: calc(12px + env(safe-area-inset-right));
+  top: calc(200px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
   width: 180px; height: 120px;
   z-index: 24;
   /* receives horizontal swipes to cycle the locked target */
@@ -449,10 +451,10 @@ html, body {
 #mfd.no-target .mfd-cross { opacity: 0.25; }
 
 /* On short landscape phones the radar shrinks, so tuck the sensor screen up
-   under it and shrink it to leave room for the right collective stick.
-   (Placed after the base #mfd rule so it wins on source order.) */
+   under it and shrink it. (Placed after the base #mfd rule so it wins on
+   source order.) */
 @media (max-height: 480px) {
-  #mfd { top: calc(194px + env(safe-area-inset-top)); width: 126px; height: 78px; }
+  #mfd { top: calc(146px + env(safe-area-inset-top)); width: 132px; height: 88px; }
 }
 
 #lock-box {
