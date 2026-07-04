@@ -9,6 +9,12 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.2.3] — 2026-07-04
+### Fixed
+- Rotated the tail rotor 90° so its disc faces sideways (a proper anti-torque
+  rotor on the side of the fin) instead of facing fore-and-aft. It still spins
+  cleanly via a mount wrapper.
+
 ## [0.2.2] — 2026-07-04
 ### Fixed
 - **Root cause of the "body looks off" issue.** The main fuselage was

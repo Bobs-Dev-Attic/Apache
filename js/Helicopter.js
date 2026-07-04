@@ -189,8 +189,13 @@ export class Helicopter {
     body.add(hstab);
 
     // --- Tail rotor ---
+    // A mount rotates the assembly 90° about the vertical axis so the disc
+    // faces sideways (proper anti-torque rotor on the side of the fin); the
+    // inner group still spins cleanly about its own local X.
+    const tailRotorMount = new THREE.Group();
+    tailRotorMount.position.set(-5.75, 0.9, 0.28);
+    tailRotorMount.rotation.y = Math.PI / 2;
     const tailRotor = new THREE.Group();
-    tailRotor.position.set(-5.75, 0.9, 0.28);
     const tBladeGeo = new THREE.BoxGeometry(0.08, 1.7, 0.24);
     for (let i = 0; i < 4; i++) {
       const tb = new THREE.Mesh(tBladeGeo, dark);
@@ -200,7 +205,8 @@ export class Helicopter {
       pivot.add(tb);
       tailRotor.add(pivot);
     }
-    body.add(tailRotor);
+    tailRotorMount.add(tailRotor);
+    body.add(tailRotorMount);
     this.tailRotor = tailRotor;
 
     // --- Stub wings + weapon pylons ---
