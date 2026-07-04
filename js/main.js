@@ -7,6 +7,8 @@ import { InputManager } from './InputManager.js';
 import { MobileControls } from './MobileControls.js';
 import { Weapon } from './Weapon.js';
 import { Targets } from './Targets.js';
+import { Instruments } from './Instruments.js';
+import { Radar } from './Radar.js';
 
 /* ------------------------------------------------------------------ *
  * Renderer & scene
@@ -84,8 +86,8 @@ input.onToggleGun = () => {
   gunStatus.classList.toggle('hidden', !weapon.armed);
   reticle.classList.toggle('hidden', !weapon.armed);
   canvas.classList.toggle('armed', weapon.armed);
-  if (weapon.armed && rocketMode) setRocketMode(false); // gun & rockets are exclusive
-  controls.panEnabled = !weapon.armed && !rocketMode;    // right-drag fires instead of panning
+  if (weapon.armed && targetMode) setTargetMode(null);  // gun & rockets/missiles are exclusive
+  controls.panEnabled = !weapon.armed && !targetMode;   // right-drag fires instead of panning
   if (!weapon.armed) weapon.setFiring(false);
 };
 
@@ -131,37 +133,41 @@ const targets = new Targets(scene, env);
 const sensorCam = new THREE.PerspectiveCamera(16, 300 / 188, 0.5, 1200);
 
 const mfd = document.getElementById('mfd');
+const mfdTop = document.getElementById('mfd-top');
 const mfdTgt = document.getElementById('mfd-tgt');
 const mfdRng = document.getElementById('mfd-rng');
 const lockBox = document.getElementById('lock-box');
 
-let rocketMode = false;
+// Targeting weapon mode: null | 'rockets' | 'missiles'
+let targetMode = null;
 const _v = new THREE.Vector3();
 const _muzzleL = new THREE.Vector3();
 
-function setRocketMode(on) {
-  rocketMode = on;
+function setTargetMode(mode) {
+  targetMode = mode;
+  const on = mode !== null;
   mfd.classList.toggle('hidden', !on);
   lockBox.classList.toggle('hidden', !on);
   controls.panEnabled = !on && !weapon.armed;
   if (on) {
-    // arming rockets stows the gun
-    if (weapon.armed) input.onToggleGun();
+    if (weapon.armed) input.onToggleGun();           // stow the gun (exclusive)
+    mfdTop.textContent = mode === 'missiles' ? '◉ TADS — MISSILES' : '◉ TADS — ROCKETS';
     targets.lockNearest(heli.group.position);
   }
 }
 
-input.onToggleRockets = () => setRocketMode(!rocketMode);
-input.onCycleTarget = () => { if (rocketMode) targets.cycle(); };
+input.onToggleRockets = () => setTargetMode(targetMode === 'rockets' ? null : 'rockets');
+input.onToggleMissiles = () => setTargetMode(targetMode === 'missiles' ? null : 'missiles');
+input.onCycleTarget = () => { if (targetMode) targets.cycle(); };
 
-// Fire a rocket at the locked target on right-click (single shot per press)
+// Fire the selected munition at the locked target on right-click (one per press)
 canvas.addEventListener('pointerdown', (e) => {
-  if (e.button === 2 && rocketMode) {
+  if (e.button === 2 && targetMode) {
     const tgt = targets.lockedTarget;
     if (tgt) {
-      // launch from a wing pylon (roughly under the stub wing)
-      const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6));
-      targets.fireRocketAt(from, tgt);
+      const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6)); // wing pylon
+      if (targetMode === 'missiles') targets.fireMissileAt(from, tgt);
+      else targets.fireRocketAt(from, tgt);
     }
   }
 });
@@ -238,10 +244,9 @@ document.getElementById('btn-recenter').addEventListener('click', () => {
   controls.target.copy(heli.group.position);
 });
 
-const hudAlt = document.getElementById('hud-alt');
-const hudSpd = document.getElementById('hud-spd');
-const hudHdg = document.getElementById('hud-hdg');
-const hudRtr = document.getElementById('hud-rtr');
+// Instrument gauge cluster + radar scope
+const instruments = new Instruments();
+const radar = new Radar(document.getElementById('radar-canvas'));
 
 /* ------------------------------------------------------------------ *
  * Device / orientation handling
@@ -312,27 +317,25 @@ function animate() {
   }
   weapon.update(dt);
 
-  // Rockets + targeting
-  targets.update(dt, () => { if (rocketMode) targets.cycle(); }); // auto-lock next on kill
-  if (rocketMode) {
+  // Rockets / missiles + targeting
+  targets.update(dt, () => { if (targetMode) targets.cycle(); }); // auto-lock next on kill
+  if (targetMode) {
     updateSensor();
     updateTargetingHud();
   }
 
-  // HUD
-  hudAlt.textContent = Math.max(0, heli.altitude).toFixed(0);
-  hudSpd.textContent = heli.speedKmh.toFixed(0);
-  hudHdg.textContent = heli.headingDeg.toFixed(0).padStart(3, '0');
-  hudRtr.textContent = (heli.rotorSpeed * 100).toFixed(0);
+  // Instruments + radar
+  instruments.update(heli);
+  radar.draw(heli, targets, dt);
 
   renderer.render(scene, camera);
 
   // The sensor "video screen" is a second render into the MFD rectangle
-  if (rocketMode) renderSensor();
+  if (targetMode) renderSensor();
 
   if (firstFrame) { firstFrame = false; hideLoading(); }
 }
 animate();
 
 // Expose for debugging in the console
-window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, get rocketMode() { return rocketMode; } };
+window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, instruments, radar, get targetMode() { return targetMode; } };

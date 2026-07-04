@@ -16,10 +16,14 @@ the folder and open it.
   landing gear. Rotors spin and blur up to speed.
 - **Low-poly desert** — procedurally displaced dune terrain, scattered rocks,
   saguaro cacti, distant mesas, a warm gradient sky, sun shadows and fog.
-- **Weapons** — M230 chain gun (fire at the cursor) and Hydra rockets with a
-  targeting sensor "video screen" (MFD): scatter of enemy tanks & technicals,
-  target locking, Tab to cycle, rockets that fly to the locked target and
-  detonate.
+- **Weapons** — M230 chain gun (fire at the cursor), Hydra rockets, and guided
+  Hellfire missiles with a targeting sensor "video screen" (MFD): scatter of
+  enemy tanks & technicals, target locking, Tab to cycle; rockets fly straight
+  to the locked target, missiles home in with a smoke trail.
+- **Instruments** — a collapsible gauge cluster (artificial horizon, airspeed,
+  altimeter, heading compass, rotor) that folds down to a mini readout.
+- **Radar** — a heading-up top-down scope showing target blips, range rings and
+  a sweep, with the locked target highlighted.
 - **Rotatable isometric camera** — orbit, tilt, zoom and pan; optionally
   follows the aircraft.
 - **Multi-platform input**
@@ -42,8 +46,9 @@ the folder and open it.
 | `Space` | Power — fly in the tilt direction |
 | `G` | Arm / stow the main gun (M230) |
 | `R` | Rocket mode + targeting sensor screen |
-| `Tab` | Cycle locked target (rocket mode) |
-| Right-click | Fire the armed weapon (gun → cursor, rockets → locked target) |
+| `M` | Missile mode (guided) + targeting sensor screen |
+| `Tab` | Cycle locked target (rocket/missile mode) |
+| Right-click | Fire the armed weapon (gun → cursor, rockets/missiles → locked target) |
 | `F` | Toggle camera follow |
 | `H` / `?` | Toggle help |
 

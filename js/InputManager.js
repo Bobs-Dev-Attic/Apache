@@ -28,6 +28,7 @@ export class InputManager {
     this.onToggleHelp = null;
     this.onToggleGun = null;
     this.onToggleRockets = null;
+    this.onToggleMissiles = null;
     this.onCycleTarget = null;
 
     this._bindKeyboard();
@@ -42,6 +43,7 @@ export class InputManager {
       if (k === 'f' && !e.repeat) this.onToggleFollow?.();
       if (k === 'g' && !e.repeat) this.onToggleGun?.();
       if (k === 'r' && !e.repeat) this.onToggleRockets?.();
+      if (k === 'm' && !e.repeat) this.onToggleMissiles?.();
       if (k === 'tab' && !e.repeat) this.onCycleTarget?.();
       if ((k === 'h' || k === '?') && !e.repeat) this.onToggleHelp?.();
       this.keys.add(k);
