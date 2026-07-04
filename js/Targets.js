@@ -182,7 +182,11 @@ export class Targets {
     this.explosions.push({ mesh: puff, life: 0.6, max: 0.6, grow: 1.6, rise: 0.6 });
   }
 
-  /** Guided Hellfire-style missile: launches, then homes onto the target. */
+  /**
+   * Guided top-attack missile. It drops off the rail, lights the motor and
+   * climbs to a high cruise altitude above the target, then pitches over and
+   * dives straight down onto it (Javelin-style top attack).
+   */
   fireMissileAt(fromPos, target) {
     if (!target || !target.alive) return false;
     const mesh = new THREE.Group();
@@ -203,10 +207,17 @@ export class Targets {
     }
     mesh.position.copy(fromPos);
     this.scene.add(mesh);
-    // initial direction: forward + slightly up (loft), then it homes
-    const dir = target.pos.clone().sub(fromPos).normalize();
-    dir.y += 0.35; dir.normalize();
-    this.missiles.push({ mesh, target, pos: fromPos.clone(), dir, speed: 26, maxSpeed: 96, turn: 2.4, trailT: 0 });
+    // Horizontal bearing to the target (used to nudge the initial drop forward).
+    const toTarget = target.pos.clone().sub(fromPos);
+    const launchFwd = new THREE.Vector3(toTarget.x, 0, toTarget.z).normalize();
+    // Starts by dropping off the rail: a shallow forward dip before the motor
+    // lights (a steep nose-down would be unrecoverable at this turn rate).
+    const dir = new THREE.Vector3(launchFwd.x, -0.6, launchFwd.z).normalize();
+    this.missiles.push({
+      mesh, target, pos: fromPos.clone(), dir,
+      speed: 14, maxSpeed: 92, turn: 3.2, trailT: 0,
+      phase: 'drop', phaseT: 0, cruise: 20, launchFwd,
+    });
     return true;
   }
 
@@ -233,13 +244,15 @@ export class Targets {
       r.flame.material.opacity = 0.6 + Math.random() * 0.35;
     }
 
-    // guided missiles
+    // guided top-attack missiles: drop -> climb to altitude -> dive on target
     for (let i = this.missiles.length - 1; i >= 0; i--) {
       const m = this.missiles[i];
-      const aim = m.target.alive ? m.target.pos : m.pos;
-      const desired = aim.clone().sub(m.pos);
-      const dist = desired.length();
-      if (dist <= (m.speed * dt + 0.6) || !m.target.alive) {
+      const tpos = m.target.alive ? m.target.pos : m.pos;
+      const distToTarget = m.pos.distanceTo(tpos);
+
+      // detonate on impact (only reachable in the terminal dive) or if the
+      // target is already gone
+      if (distToTarget <= (m.speed * dt + 0.6) || !m.target.alive) {
         this._detonate(m.target.alive ? m.target.pos : m.pos, m.target.alive ? m.target : null, 1.6);
         this.scene.remove(m.mesh);
         m.mesh.traverse(o => { o.geometry?.dispose?.(); o.material?.dispose?.(); });
@@ -247,13 +260,39 @@ export class Targets {
         if (onKill) onKill();
         continue;
       }
+
+      m.phaseT += dt;
+      const dx = tpos.x - m.pos.x, dz = tpos.z - m.pos.z;
+      const horiz = Math.hypot(dx, dz);
+      const desired = new THREE.Vector3();
+      if (m.phase === 'drop') {
+        // shallow forward dip off the rail for a beat, then light the motor
+        desired.set(m.launchFwd.x, -0.6, m.launchFwd.z);
+        if (m.phaseT >= 0.28) { m.phase = 'climb'; m.phaseT = 0; }
+      } else if (m.phase === 'climb') {
+        // Climb hard toward cruise altitude, drifting toward the target. Bias
+        // the vertical component so it gains height steeply first, then levels
+        // off over the target once high enough.
+        const up = (tpos.y + m.cruise) - m.pos.y;
+        if (up > 2) desired.set(dx, Math.max(up, horiz * 1.1 + 5), dz);
+        else desired.set(dx, up, dz);
+        // tip over once at altitude and roughly over the target, if it has
+        // clearly overshot the apex, or after a safety timeout
+        if ((up <= 3 && horiz < 16) || up < -5 || m.phaseT > 5) { m.phase = 'dive'; m.phaseT = 0; }
+      } else { // dive straight down onto the target
+        desired.subVectors(tpos, m.pos);
+      }
       desired.normalize();
-      // steer current heading toward the target with a limited turn rate
+
+      // steer current heading toward the desired direction with a limited turn
+      // rate; the terminal dive pitches over faster
       const ang = m.dir.angleTo(desired);
-      const step = m.turn * dt;
-      if (ang <= step || ang < 1e-4) m.dir.copy(desired);
-      else m.dir.lerp(desired, step / ang).normalize();
-      m.speed = Math.min(m.maxSpeed, m.speed + 70 * dt);
+      const turn = (m.phase === 'dive' ? m.turn * 2.4 : m.turn) * dt;
+      if (ang <= turn || ang < 1e-4) m.dir.copy(desired);
+      else m.dir.lerp(desired, turn / ang).normalize();
+
+      // gentle during the drop, then accelerate to cruise once the motor lights
+      m.speed = m.phase === 'drop' ? 14 : Math.min(m.maxSpeed, m.speed + 70 * dt);
       m.pos.addScaledVector(m.dir, m.speed * dt);
       m.mesh.position.copy(m.pos);
       m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), m.dir);
