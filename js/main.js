@@ -9,6 +9,7 @@ import { Weapon } from './Weapon.js';
 import { Targets } from './Targets.js';
 import { Instruments } from './Instruments.js';
 import { Radar } from './Radar.js';
+import { Flares } from './Flares.js';
 
 /* ------------------------------------------------------------------ *
  * Renderer & scene
@@ -159,6 +160,22 @@ function setTargetMode(mode) {
 input.onToggleRockets = () => setTargetMode(targetMode === 'rockets' ? null : 'rockets');
 input.onToggleMissiles = () => setTargetMode(targetMode === 'missiles' ? null : 'missiles');
 input.onCycleTarget = () => { if (targetMode) targets.cycle(); };
+
+// Dedicated fire buttons: 1 = rockets, 2 = missiles (at the locked target)
+function fireMunition(kind) {
+  if (!targets.lockedTarget) targets.lockNearest(heli.group.position);
+  const tgt = targets.lockedTarget;
+  if (!tgt) return;
+  const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6)); // wing pylon
+  if (kind === 'missiles') targets.fireMissileAt(from, tgt);
+  else targets.fireRocketAt(from, tgt);
+}
+input.onFireRockets = () => fireMunition('rockets');
+input.onFireMissiles = () => fireMunition('missiles');
+
+// Flares (F)
+const flares = new Flares(scene);
+input.onDeployFlares = () => flares.deploy(heli);
 
 // Fire the selected munition at the locked target on right-click (one per press)
 canvas.addEventListener('pointerdown', (e) => {
@@ -324,7 +341,8 @@ function animate() {
     updateTargetingHud();
   }
 
-  // Instruments + radar
+  // Countermeasures + instruments + radar
+  flares.update(dt);
   instruments.update(heli);
   radar.draw(heli, targets, dt);
 
@@ -338,4 +356,4 @@ function animate() {
 animate();
 
 // Expose for debugging in the console
-window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, instruments, radar, get targetMode() { return targetMode; } };
+window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, instruments, radar, flares, get targetMode() { return targetMode; } };

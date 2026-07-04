@@ -30,6 +30,9 @@ export class InputManager {
     this.onToggleRockets = null;
     this.onToggleMissiles = null;
     this.onCycleTarget = null;
+    this.onDeployFlares = null;
+    this.onFireRockets = null;
+    this.onFireMissiles = null;
 
     this._bindKeyboard();
   }
@@ -40,10 +43,13 @@ export class InputManager {
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'tab'].includes(k)) {
         e.preventDefault();
       }
-      if (k === 'f' && !e.repeat) this.onToggleFollow?.();
+      if (k === 'f' && !e.repeat) this.onDeployFlares?.();
+      if (k === 'v' && !e.repeat) this.onToggleFollow?.();
       if (k === 'g' && !e.repeat) this.onToggleGun?.();
       if (k === 'r' && !e.repeat) this.onToggleRockets?.();
       if (k === 'm' && !e.repeat) this.onToggleMissiles?.();
+      if (k === '1' && !e.repeat) this.onFireRockets?.();
+      if (k === '2' && !e.repeat) this.onFireMissiles?.();
       if (k === 'tab' && !e.repeat) this.onCycleTarget?.();
       if ((k === 'h' || k === '?') && !e.repeat) this.onToggleHelp?.();
       this.keys.add(k);
