@@ -304,6 +304,9 @@ controls.onViewChange = (name) => {
   viewLabel._t = setTimeout(() => viewLabel.classList.remove('show'), 1400);
 };
 document.getElementById('btn-recenter').addEventListener('click', () => controls.cycleView());
+// Start in the rear (chase-from-behind) view by default.
+const _rearView = controls.views.findIndex(v => v.name === 'REAR');
+controls.setView(_rearView >= 0 ? _rearView : 0);
 
 // Instrument gauge cluster + radar scope
 const instruments = new Instruments();
