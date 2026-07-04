@@ -36,6 +36,8 @@ the folder and open it.
 | `C` / `Shift` | Collective up — climb |
 | `Z` / `Ctrl` | Collective down — descend |
 | `Space` | Power — fly in the tilt direction |
+| `G` | Arm / stow the main gun (M230) |
+| Right-click | Fire the gun at the cursor (while armed) |
 | `F` | Toggle camera follow |
 | `H` / `?` | Toggle help |
 

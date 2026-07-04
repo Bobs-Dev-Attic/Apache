@@ -5,6 +5,7 @@ import { Helicopter } from './Helicopter.js';
 import { Environment } from './Environment.js';
 import { InputManager } from './InputManager.js';
 import { MobileControls } from './MobileControls.js';
+import { Weapon } from './Weapon.js';
 
 /* ------------------------------------------------------------------ *
  * Renderer & scene
@@ -69,6 +70,55 @@ input.onToggleFollow = () => {
   if (controls.follow) controls.panOffset.set(0, 0, 0);
 };
 input.onToggleHelp = () => toggleHelp();
+
+/* ------------------------------------------------------------------ *
+ * Weapon (M230 chain gun)
+ * ------------------------------------------------------------------ */
+const weapon = new Weapon(scene, heli);
+const reticle = document.getElementById('reticle');
+const gunStatus = document.getElementById('gun-status');
+
+input.onToggleGun = () => {
+  weapon.armed = !weapon.armed;
+  gunStatus.classList.toggle('hidden', !weapon.armed);
+  reticle.classList.toggle('hidden', !weapon.armed);
+  canvas.classList.toggle('armed', weapon.armed);
+  controls.panEnabled = !weapon.armed;   // right-drag fires instead of panning
+  if (!weapon.armed) weapon.setFiring(false);
+};
+
+// Cursor tracking + right-button firing (desktop)
+const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+let rightDown = false;
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const aimPoint = new THREE.Vector3();
+
+// Use pointer events (the controls preventDefault() pointerdown, which would
+// otherwise suppress the compatibility mouse events).
+canvas.addEventListener('pointermove', (e) => {
+  cursor.x = e.clientX; cursor.y = e.clientY;
+  reticle.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+});
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.button === 2 && weapon.armed) rightDown = true;
+});
+window.addEventListener('pointerup', (e) => { if (e.button === 2) rightDown = false; });
+window.addEventListener('blur', () => { rightDown = false; });
+
+// Project the cursor onto the terrain (fallback: far along the ray) → aim point
+function updateAim() {
+  ndc.x = (cursor.x / window.innerWidth) * 2 - 1;
+  ndc.y = -(cursor.y / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  const hits = raycaster.intersectObject(env.terrain, false);
+  if (hits.length) {
+    aimPoint.copy(hits[0].point);
+    return true;
+  }
+  raycaster.ray.at(300, aimPoint);
+  return true;
+}
 
 /* ------------------------------------------------------------------ *
  * UI wiring
@@ -149,6 +199,16 @@ function animate() {
   controls.update();
   env.updateSun(controls.target);
 
+  // Weapon: aim at the cursor, fire on right-button while armed
+  if (weapon.armed) {
+    const ok = updateAim();
+    weapon.setAim(aimPoint, ok);
+    weapon.setFiring(rightDown);
+  } else {
+    weapon.setFiring(false);
+  }
+  weapon.update(dt);
+
   // HUD
   hudAlt.textContent = Math.max(0, heli.altitude).toFixed(0);
   hudSpd.textContent = heli.speedKmh.toFixed(0);
@@ -162,4 +222,4 @@ function animate() {
 animate();
 
 // Expose for debugging in the console
-window.__sim = { scene, camera, heli, env, controls, input };
+window.__sim = { scene, camera, heli, env, controls, input, weapon };
