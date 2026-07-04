@@ -154,8 +154,7 @@ html, body {
 #radar {
   position: fixed;
   top: calc(12px + env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
+  right: calc(12px + env(safe-area-inset-right));
   z-index: 20;
   width: 180px; height: 180px;
   border-radius: 50%;
@@ -390,12 +389,11 @@ html, body {
 #scene.armed { cursor: crosshair; }
 
 /* ---------- Rocket targeting: MFD sensor screen + lock box ---------- */
-/* Always-on sensor feed, parked directly under the radar (top-centre). */
+/* Always-on sensor feed, parked directly under the radar (top-right). */
 #mfd {
   position: fixed;
   top: calc(200px + env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
+  right: calc(12px + env(safe-area-inset-right));
   width: 180px; height: 120px;
   z-index: 24;
   /* receives horizontal swipes to cycle the locked target */
