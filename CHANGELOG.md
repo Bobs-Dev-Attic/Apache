@@ -9,6 +9,17 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.1.1] — 2026-07-04
+### Fixed
+- Cyclic axes were swapped: left/right (bank) input tilted the aircraft
+  fore/aft and forward/back (pitch) input rolled it. Pitch now rotates about
+  the lateral axis and roll about the longitudinal axis, so the model tilts
+  the way you steer.
+- Rotated the helicopter body ~15° clockwise so it sits square to the view.
+  The offset is visual only and does not affect the flight/travel direction.
+### Changed
+- Idle bob no longer accumulates drift; it is applied as a bounded pitch offset.
+
 ## [0.1.0] — 2026-07-04
 ### Added
 - Initial MVP release.
