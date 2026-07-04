@@ -20,6 +20,9 @@ export class Targets {
     this.rockets = [];
     this.missiles = [];
     this.explosions = [];
+    this.debris = [];      // ballistic chunks / vehicle parts thrown by a blast
+    this.hulks = [];        // burning wrecks that keep smoking
+    this.scorches = [];     // scorch stains on the ground
     this._spawn();
   }
 
@@ -150,10 +153,7 @@ export class Targets {
   }
 
   _detonate(pos, target, scale = 1) {
-    if (target) {
-      target.alive = false;
-      target.group.visible = false;
-    }
+    const groundY = this.env.heightAt(pos.x, pos.z);
     // fireball
     const fire = new THREE.Mesh(
       new THREE.SphereGeometry(1.0 * scale, 8, 6),
@@ -162,7 +162,7 @@ export class Targets {
     fire.position.copy(pos);
     this.scene.add(fire);
     this.explosions.push({ mesh: fire, life: 0.5, max: 0.5, grow: 5 * scale });
-    // smoke
+    // rolling smoke ball
     const smoke = new THREE.Mesh(
       new THREE.SphereGeometry(1.2 * scale, 7, 6),
       new THREE.MeshBasicMaterial({ color: 0x3b342c, transparent: true, opacity: 0.9, depthWrite: false })
@@ -170,6 +170,130 @@ export class Targets {
     smoke.position.copy(pos).y += 0.6;
     this.scene.add(smoke);
     this.explosions.push({ mesh: smoke, life: 1.1, max: 1.1, grow: 3.5 * scale, rise: 2.2 });
+
+    // thrown dirt, dust and fragments
+    this._spawnDebris(pos, groundY, scale);
+
+    // shred the vehicle: parts fly off, a burning hulk + ground stain remain
+    if (target && target.group) {
+      target.alive = false;
+      this._wreckTarget(target, pos, groundY, scale);
+      this._scorch(target.pos, groundY, target.radius);
+    }
+  }
+
+  _rndSpin(s = 8) {
+    return new THREE.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, (Math.random() - 0.5) * s);
+  }
+
+  /** Dirt clods, a dust cloud and metal fragments blown out of the impact. */
+  _spawnDebris(pos, groundY, scale) {
+    // chunks of dirt / metal that arc out under gravity
+    const chunks = Math.round(11 * scale);
+    for (let k = 0; k < chunks; k++) {
+      const metal = Math.random() < 0.35;
+      const s = (metal ? 0.1 : 0.14) + Math.random() * (metal ? 0.16 : 0.28);
+      const geo = Math.random() < 0.6
+        ? new THREE.TetrahedronGeometry(s)
+        : new THREE.BoxGeometry(s, s * (0.6 + Math.random()), s);
+      const mesh = new THREE.Mesh(geo, this._mat(metal ? 0x2b2822 : 0x4a3a20, { roughness: 1, metalness: metal ? 0.5 : 0.1 }));
+      mesh.castShadow = true;
+      mesh.position.copy(pos);
+      this.scene.add(mesh);
+      const ang = Math.random() * Math.PI * 2;
+      const spd = 3 + Math.random() * (metal ? 12 : 8);
+      const vel = new THREE.Vector3(Math.cos(ang) * spd, 6 + Math.random() * 9, Math.sin(ang) * spd);
+      this.debris.push({
+        mesh, pos: pos.clone(), vel, angVel: this._rndSpin(12),
+        groundY, life: 1.6 + Math.random() * 1.4, fade: 0.5,
+      });
+    }
+    // low, spreading dust cloud (reuses the explosion fade/grow system)
+    const dust = Math.round(6 * scale);
+    for (let k = 0; k < dust; k++) {
+      const puff = new THREE.Mesh(
+        new THREE.SphereGeometry(0.4 + Math.random() * 0.5, 6, 5),
+        new THREE.MeshBasicMaterial({ color: 0x8a7550, transparent: true, opacity: 0.5, depthWrite: false })
+      );
+      puff.position.set(
+        pos.x + (Math.random() - 0.5) * 2.0, groundY + 0.3 + Math.random() * 0.6,
+        pos.z + (Math.random() - 0.5) * 2.0
+      );
+      this.scene.add(puff);
+      this.explosions.push({ mesh: puff, life: 1.0 + Math.random() * 0.7, max: 1.7, grow: 2.6 * scale, rise: 1.1 });
+    }
+  }
+
+  /** Break the vehicle apart: throw its upper parts, char the rest into a
+   *  smoldering hulk with flames. */
+  _wreckTarget(target, pos, groundY, scale) {
+    const g = target.group;
+    g.updateMatrixWorld(true);
+    const parts = g.children.filter(o => o.isMesh);
+    const hulkMat = this._mat(0x1a1712, { roughness: 1, metalness: 0.1 });
+    let flew = 0;
+    for (const child of parts) {
+      // upper parts (turret, barrel, gun, mount) blow off; the base stays
+      if (child.position.y > 1.3) {
+        const wp = child.getWorldPosition(new THREE.Vector3());
+        const wq = child.getWorldQuaternion(new THREE.Quaternion());
+        g.remove(child);
+        child.material = this._mat(0x241d15, { roughness: 1, metalness: 0.3 });
+        child.position.copy(wp);
+        child.quaternion.copy(wq);
+        this.scene.add(child);
+        const out = new THREE.Vector3(wp.x - pos.x, 0, wp.z - pos.z);
+        if (out.lengthSq() < 0.02) out.set(Math.random() - 0.5, 0, Math.random() - 0.5);
+        out.normalize();
+        const spd = 4 + Math.random() * 6;
+        const vel = new THREE.Vector3(out.x * spd, 8 + Math.random() * 6, out.z * spd);
+        this.debris.push({
+          mesh: child, pos: wp.clone(), vel, angVel: this._rndSpin(7),
+          groundY, life: 4 + Math.random() * 2, fade: 0.8, ownMat: true,
+        });
+        flew++;
+      } else {
+        child.material = hulkMat;
+      }
+    }
+    // settle + tilt the charred hulk
+    g.position.y = groundY - 0.12;
+    g.rotation.z += (Math.random() - 0.5) * 0.28;
+    g.rotation.x += (Math.random() - 0.5) * 0.16;
+    // flames riding on the wreck
+    const flames = this._makeFlames(scale);
+    flames.position.set(0, 1.1, 0);
+    g.add(flames);
+    this.hulks.push({ group: g, pos: target.pos.clone(), groundY, smokeT: 0, flames });
+    void flew;
+  }
+
+  _makeFlames(scale) {
+    const grp = new THREE.Group();
+    for (let k = 0; k < 3; k++) {
+      const flame = new THREE.Mesh(
+        new THREE.ConeGeometry(0.28 * scale, 1.0 * scale, 6),
+        new THREE.MeshBasicMaterial({ color: k === 1 ? 0xffd24a : 0xff7a26, transparent: true, opacity: 0.9, depthWrite: false })
+      );
+      flame.position.set((k - 1) * 0.5 * scale, 0.4 + Math.random() * 0.2, (Math.random() - 0.5) * 0.6);
+      grp.add(flame);
+    }
+    return grp;
+  }
+
+  /** Flat black scorch stain painted on the ground under a kill. */
+  _scorch(center, groundY, radius) {
+    const r = (radius || 2) * 2.4;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x0a0806, transparent: true, opacity: 0, depthWrite: false,
+    });
+    mat.polygonOffset = true; mat.polygonOffsetFactor = -2; mat.polygonOffsetUnits = -2;
+    const decal = new THREE.Mesh(new THREE.CircleGeometry(r, 22), mat);
+    decal.rotation.x = -Math.PI / 2;
+    decal.position.set(center.x, groundY + 0.06, center.z);
+    decal.receiveShadow = true;
+    this.scene.add(decal);
+    this.scorches.push({ mesh: decal, t: 0, fadeIn: 0.5, opacity: 0.78 });
   }
 
   _trailPuff(pos) {
@@ -314,6 +438,69 @@ export class Targets {
         e.mesh.geometry.dispose();
         e.mesh.material.dispose();
         this.explosions.splice(i, 1);
+      }
+    }
+
+    // flying debris / vehicle parts (ballistic, bounce, settle, fade)
+    for (let i = this.debris.length - 1; i >= 0; i--) {
+      const d = this.debris[i];
+      d.life -= dt;
+      if (!d.settled) {
+        d.vel.y -= 24 * dt;                 // gravity
+        d.pos.addScaledVector(d.vel, dt);
+        d.mesh.rotation.x += d.angVel.x * dt;
+        d.mesh.rotation.y += d.angVel.y * dt;
+        d.mesh.rotation.z += d.angVel.z * dt;
+        if (d.pos.y <= d.groundY + 0.06) {
+          d.pos.y = d.groundY + 0.06;
+          if (!d.bounced && d.vel.y < -3) {   // one small bounce, then rest
+            d.vel.y *= -0.32; d.vel.x *= 0.4; d.vel.z *= 0.4;
+            d.angVel.multiplyScalar(0.4); d.bounced = true;
+          } else {
+            d.settled = true; d.vel.set(0, 0, 0);
+          }
+        }
+        d.mesh.position.copy(d.pos);
+      }
+      if (d.life < d.fade) {
+        d.mesh.material.transparent = true;
+        d.mesh.material.opacity = Math.max(0, d.life / d.fade);
+      }
+      if (d.life <= 0) {
+        this.scene.remove(d.mesh);
+        d.mesh.geometry.dispose();
+        d.mesh.material.dispose();
+        this.debris.splice(i, 1);
+      }
+    }
+
+    // burning hulks: flicker the flames and keep a smoke column rising
+    for (const h of this.hulks) {
+      for (const f of h.flames.children) {
+        f.scale.set(0.8 + Math.random() * 0.5, 0.7 + Math.random() * 0.7, 0.8 + Math.random() * 0.5);
+        f.material.opacity = 0.6 + Math.random() * 0.4;
+      }
+      h.smokeT -= dt;
+      if (h.smokeT <= 0) {
+        h.smokeT = 0.24;
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(0.6 + Math.random() * 0.4, 6, 5),
+          new THREE.MeshBasicMaterial({ color: 0x171310, transparent: true, opacity: 0.7, depthWrite: false })
+        );
+        puff.position.set(
+          h.pos.x + (Math.random() - 0.5) * 0.8, h.groundY + 1.4,
+          h.pos.z + (Math.random() - 0.5) * 0.8
+        );
+        this.scene.add(puff);
+        this.explosions.push({ mesh: puff, life: 2.4 + Math.random(), max: 3.4, grow: 3.0, rise: 3.6 });
+      }
+    }
+
+    // scorch stains fade in, then persist
+    for (const sc of this.scorches) {
+      if (sc.t < sc.fadeIn) {
+        sc.t += dt;
+        sc.mesh.material.opacity = Math.min(sc.opacity, (sc.t / sc.fadeIn) * sc.opacity);
       }
     }
   }

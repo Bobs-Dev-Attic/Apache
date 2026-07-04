@@ -9,6 +9,13 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.13.0] — 2026-07-04
+### Added
+- **Destructible wrecks.** A rocket or missile hit now throws out dirt clods,
+  dust and metal fragments (which arc, bounce and settle), blows the vehicle's
+  upper parts off, and leaves a charred, flaming hulk with a rising smoke column
+  and a black smoldering scorch stain on the ground.
+
 ## [0.12.0] — 2026-07-04
 ### Added
 - **Cycling camera views.** The recenter button is now a **🎥 view button** —
