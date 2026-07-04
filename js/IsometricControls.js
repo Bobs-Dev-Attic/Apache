@@ -40,6 +40,29 @@ export class IsometricControls {
     this.followLerp = 0.08;
     this.panOffset = new THREE.Vector3(0, 0, 0);
 
+    // Camera view presets cycled by the view button. `az` is a fixed world
+    // azimuth; `rel` (radians) is an offset from "directly behind" that tracks
+    // the aircraft's heading, so those views stay oriented as it turns.
+    // Ordered: overview -> chase -> top-down -> around the rear -> sides -> low front.
+    const HALF = Math.PI / 2, QTR = Math.PI / 4;
+    this.views = [
+      { name: 'ISO',    az: Math.PI / 4, polar: 0.6155, zoom: 1.0 },
+      { name: 'CHASE',  rel: 0,          polar: 0.95,   zoom: 1.15 },
+      { name: 'TOP',    az: Math.PI / 4, polar: this.minPolar, zoom: 1.0 },
+      { name: 'REAR L', rel: -QTR,       polar: 1.12,   zoom: 1.0 },
+      { name: 'REAR',   rel: 0,          polar: 1.28,   zoom: 1.0 },
+      { name: 'REAR R', rel: QTR,        polar: 1.12,   zoom: 1.0 },
+      { name: 'SIDE L', rel: -HALF,      polar: 1.2,    zoom: 1.0 },
+      { name: 'SIDE R', rel: HALF,       polar: 1.2,    zoom: 1.0 },
+      { name: 'LOW L',  rel: -3 * QTR,   polar: 1.28,   zoom: 1.0 },
+      { name: 'LOW R',  rel: 3 * QTR,    polar: 1.28,   zoom: 1.0 },
+    ];
+    this.viewIndex = 0;
+    this._headingTrack = false;   // true while a heading-relative view is active
+    this._azRel = 0;
+    this.getHeading = null;       // () => aircraft heading (radians)
+    this.onViewChange = null;     // (name) => void, for a UI label
+
     // Smoothing damping
     this.damping = 0.15;
     this._azTarget = this.azimuth;
@@ -66,13 +89,31 @@ export class IsometricControls {
 
   setFollowObject(obj) { this.followObject = obj; }
 
-  recenter() {
+  recenter() { this.setView(0); }
+
+  /** Advance to the next camera view preset (wraps around). */
+  cycleView() { this.setView((this.viewIndex + 1) % this.views.length); }
+
+  /** Apply a camera view preset by index. */
+  setView(index) {
+    this.viewIndex = index;
+    const v = this.views[index];
     this.panOffset.set(0, 0, 0);
-    this._azTarget = Math.PI / 4;
-    this._polTarget = Math.atan(1 / Math.sqrt(2));
-    this._zoomTarget = 1;
     this.follow = true;
+    this._polTarget = v.polar;
+    this._zoomTarget = v.zoom;
+    if (v.rel !== undefined) {
+      this._headingTrack = true;
+      this._azRel = v.rel;
+    } else {
+      this._headingTrack = false;
+      this._azTarget = v.az;
+    }
+    this.onViewChange?.(v.name);
   }
+
+  /** World azimuth that places the camera directly behind the aircraft. */
+  _behindAz(h) { return Math.atan2(-Math.cos(h), Math.sin(h)); }
 
   _bind() {
     const el = this.dom;
@@ -139,6 +180,8 @@ export class IsometricControls {
   };
 
   _rotate(dx, dy) {
+    // Manually rotating drops out of a canned view into free-look.
+    this._headingTrack = false;
     this._azTarget -= dx * this.rotateSpeed;
     this._polTarget = THREE.MathUtils.clamp(
       this._polTarget - dy * this.rotateSpeed,
@@ -186,6 +229,15 @@ export class IsometricControls {
   _mid(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
 
   update() {
+    // Heading-relative views: keep the azimuth target parked behind the
+    // aircraft (unwrapped to the nearest revolution so it never spins around).
+    if (this._headingTrack && this.getHeading) {
+      let a = this._behindAz(this.getHeading()) + this._azRel;
+      while (a - this.azimuth > Math.PI) a -= 2 * Math.PI;
+      while (a - this.azimuth < -Math.PI) a += 2 * Math.PI;
+      this._azTarget = a;
+    }
+
     // Smooth orbit + zoom toward targets
     this.azimuth += (this._azTarget - this.azimuth) * this.damping;
     this.polar += (this._polTarget - this.polar) * this.damping;

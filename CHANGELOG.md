@@ -9,6 +9,18 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.12.0] — 2026-07-04
+### Added
+- **Cycling camera views.** The recenter button is now a **🎥 view button** —
+  press it to cycle through camera presets: ISO (default), CHASE, TOP-DOWN,
+  REAR L / REAR / REAR R, SIDE L / SIDE R, and LOW L / LOW R. The chase, rear
+  and side views track the aircraft's heading so they stay oriented as it turns;
+  a brief label shows the active view. Manually rotating the camera drops back
+  into free-look.
+### Changed
+- **Moved the ? and camera buttons** from the top-right to just right of the
+  cyclic stick.
+
 ## [0.11.0] — 2026-07-04
 ### Changed
 - **Top-attack missiles.** Guided missiles now fly a top-attack profile: they

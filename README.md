@@ -79,6 +79,12 @@ the folder and open it.
 - **Two-finger pinch** — zoom.
 - **Two-finger drag** — pan.
 
+### Camera views
+The **🎥 button** (right of the cyclic stick) cycles through preset views: ISO
+(default), CHASE, TOP-DOWN, REAR L / REAR / REAR R, SIDE L / SIDE R and LOW L /
+LOW R. Chase, rear and side views track the aircraft's heading; rotating the
+camera by hand returns to free-look.
+
 ## Running locally
 
 The app loads Three.js from a CDN via an [import map], so it must be served over

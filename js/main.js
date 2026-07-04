@@ -277,10 +277,17 @@ function toggleHelp(force) {
 }
 document.getElementById('btn-help').addEventListener('click', () => toggleHelp(true));
 document.getElementById('btn-close-help').addEventListener('click', () => toggleHelp(false));
-document.getElementById('btn-recenter').addEventListener('click', () => {
-  controls.recenter();
-  controls.target.copy(heli.group.position);
-});
+// The view button cycles through the camera view presets.
+const viewLabel = document.getElementById('view-label');
+controls.getHeading = () => heli.heading;
+controls.onViewChange = (name) => {
+  if (!viewLabel) return;
+  viewLabel.textContent = name;
+  viewLabel.classList.add('show');
+  clearTimeout(viewLabel._t);
+  viewLabel._t = setTimeout(() => viewLabel.classList.remove('show'), 1400);
+};
+document.getElementById('btn-recenter').addEventListener('click', () => controls.cycleView());
 
 // Instrument gauge cluster + radar scope
 const instruments = new Instruments();
