@@ -179,11 +179,31 @@ html, body {
 /* ---------- Top-right controls ---------- */
 #top-controls {
   position: fixed;
-  top: calc(12px + env(safe-area-inset-top));
-  right: calc(12px + env(safe-area-inset-right));
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: calc(168px + env(safe-area-inset-left));
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 8px;
-  z-index: 20;
+  z-index: 32;
+}
+#view-label {
+  min-width: 42px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(20, 16, 8, 0.72);
+  border: 1px solid var(--panel-line);
+  color: var(--accent);
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+#view-label.show { opacity: 1; }
+@media (max-height: 430px) {
+  #top-controls { left: calc(150px + env(safe-area-inset-left)); bottom: calc(14px + env(safe-area-inset-bottom)); gap: 6px; }
+  .ui-btn { width: 38px; height: 38px; font-size: 18px; }
 }
 .ui-btn {
   background: var(--panel);
