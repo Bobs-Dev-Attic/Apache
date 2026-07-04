@@ -9,6 +9,18 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.2.2] — 2026-07-04
+### Fixed
+- **Root cause of the "body looks off" issue.** The main fuselage was
+  internally yawed ~30° off the nose/tail axis — `rotation.y` (meant only to
+  orient the hexagonal faces) was rotating about the wrong axis due to Euler
+  order, so it turned the whole fuselage instead of spinning its faces. It now
+  spins about its own long axis and sits square with the nose, tail boom and
+  rotor mast. No whole-body offset could fix this, which is why earlier yaw
+  tweaks never looked right.
+- Reset the visual whole-body yaw offset to 0 now that the model is built
+  square; the nose points where the aircraft flies.
+
 ## [0.2.1] — 2026-07-04
 ### Changed
 - Rotated the helicopter body a further 15° clockwise (now ~45° total), per
