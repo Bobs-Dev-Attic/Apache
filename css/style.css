@@ -254,26 +254,27 @@ html, body {
 #mobile-controls.hidden { display: none; }
 
 /* ---------- Mobile weapon controls ---------- */
+/* Weapon selector: horizontal toolbar across the top-left. */
 #weapon-select {
   position: fixed;
   left: calc(10px + env(safe-area-inset-left));
-  top: 50%;
-  transform: translateY(-50%);
+  top: calc(10px + env(safe-area-inset-top));
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
   gap: 10px;
   z-index: 30;
 }
-#weapon-fire {
+/* Throttle + fire, stacked (FIRE above PWR) just inboard of the right stick. */
+#right-buttons {
   position: fixed;
-  right: calc(10px + env(safe-area-inset-right));
-  top: 50%;
-  transform: translateY(-50%);
+  right: calc(184px + env(safe-area-inset-right));
+  bottom: calc(24px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  z-index: 30;
+  gap: 14px;
+  z-index: 31;
 }
 .wpn-btn {
   width: 60px; height: 60px;
@@ -310,8 +311,9 @@ html, body {
 .fire-btn.disabled { opacity: 0.3; }
 @media (max-height: 430px) {
   .wpn-btn { width: 52px; height: 52px; font-size: 13px; }
-  .fire-btn { width: 74px; height: 74px; font-size: 16px; }
+  .fire-btn { width: 72px; height: 72px; font-size: 16px; }
   #weapon-select { gap: 8px; }
+  #right-buttons { right: calc(160px + env(safe-area-inset-right)); gap: 10px; }
 }
 
 /* ---------- Gun status + reticle ---------- */
@@ -358,12 +360,12 @@ html, body {
 #scene.armed { cursor: crosshair; }
 
 /* ---------- Rocket targeting: MFD sensor screen + lock box ---------- */
+/* Always-on sensor feed, parked directly under the radar (top-right). */
 #mfd {
   position: fixed;
-  left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  width: 300px; height: 188px;
+  top: calc(252px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  width: 180px; height: 120px;
   z-index: 24;
   pointer-events: none;
   border: 2px solid rgba(120, 255, 150, 0.55);
@@ -415,6 +417,13 @@ html, body {
 #mfd.no-target { border-color: rgba(255,180,80,0.5); color: #ffcf8a; }
 #mfd.no-target .mfd-cross { opacity: 0.25; }
 
+/* On short landscape phones the radar shrinks, so tuck the sensor screen up
+   under it and shrink it to leave room for the right collective stick.
+   (Placed after the base #mfd rule so it wins on source order.) */
+@media (max-height: 480px) {
+  #mfd { top: calc(194px + env(safe-area-inset-top)); width: 126px; height: 78px; }
+}
+
 #lock-box {
   position: fixed; top: 0; left: 0;
   width: 54px; height: 54px; margin: -27px 0 0 -27px;
@@ -432,46 +441,44 @@ html, body {
 #lock-box .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
 #lock-box .br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
-@media (max-height: 430px) {
-  #mfd { width: 232px; height: 146px; }
-}
-
+/* ---------- Twin virtual joysticks ---------- */
 .joystick {
   position: fixed;
-  bottom: calc(28px + env(safe-area-inset-bottom));
-  left: calc(28px + env(safe-area-inset-left));
-  width: 140px; height: 140px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  width: 132px; height: 132px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(40,32,16,0.55), rgba(20,16,8,0.35));
   border: 2px solid var(--panel-line);
   z-index: 30;
   touch-action: none;
 }
+#joystick { left: calc(24px + env(safe-area-inset-left)); }
+#collective-stick { right: calc(24px + env(safe-area-inset-right)); }
 .joystick-knob {
   position: absolute;
   top: 50%; left: 50%;
-  width: 58px; height: 58px;
-  margin: -29px 0 0 -29px;
+  width: 56px; height: 56px;
+  margin: -28px 0 0 -28px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #ffd984, #b9863a);
   border: 2px solid rgba(255,255,255,0.35);
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
   transition: transform 0.05s linear;
 }
-
-#button-cluster {
-  position: fixed;
-  bottom: calc(28px + env(safe-area-inset-bottom));
-  right: calc(28px + env(safe-area-inset-right));
-  display: flex;
-  align-items: flex-end;
-  gap: 14px;
-  z-index: 30;
+.joy-cap {
+  position: absolute;
+  bottom: 8px; left: 0; right: 0;
+  text-align: center;
+  font-size: 9px; letter-spacing: 2px;
+  color: var(--hud-text);
+  opacity: 0.5;
+  pointer-events: none;
 }
+
 .power-btn {
-  width: 88px !important;
-  height: 88px !important;
-  font-size: 20px !important;
+  width: 84px !important;
+  height: 84px !important;
+  font-size: 19px !important;
   font-weight: 700;
   letter-spacing: 1px;
   border-color: rgba(255, 207, 110, 0.5) !important;
@@ -481,7 +488,6 @@ html, body {
   background: radial-gradient(circle at 35% 30%, var(--accent), #a9701f) !important;
   color: #1a140b !important;
 }
-.btn-col { display: flex; flex-direction: column; gap: 14px; }
 .pad-btn {
   width: 74px; height: 74px;
   border-radius: 50%;
@@ -508,6 +514,7 @@ html, body {
 @media (max-height: 430px) {
   .hud-panel { padding: 7px 11px; min-width: 116px; }
   .hud-row span:nth-child(2) { font-size: 17px; }
-  .joystick { width: 120px; height: 120px; }
+  .joystick { width: 108px; height: 108px; bottom: calc(10px + env(safe-area-inset-bottom)); }
+  .joystick-knob { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
   .pad-btn { width: 62px; height: 62px; font-size: 22px; }
 }

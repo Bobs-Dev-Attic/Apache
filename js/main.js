@@ -152,13 +152,16 @@ const _muzzleL = new THREE.Vector3();
 function setTargetMode(mode) {
   targetMode = mode;
   const on = mode !== null;
-  mfd.classList.toggle('hidden', !on);
+  // The MFD sensor screen is always visible; only the world-space lock box and
+  // the weapon label depend on being in a targeting mode.
   lockBox.classList.toggle('hidden', !on);
   controls.panEnabled = !on && !weapon.armed;
   if (on) {
     if (weapon.armed) input.onToggleGun();           // stow the gun (exclusive)
     mfdTop.textContent = mode === 'missiles' ? '◉ TADS — MISSILES' : '◉ TADS — ROCKETS';
     targets.lockNearest(heli.group.position);
+  } else {
+    mfdTop.textContent = '◉ TADS — SENSOR';
   }
   mobile.setWeaponState(mode || (weapon.armed ? 'gun' : null));
 }
@@ -227,9 +230,9 @@ function updateTargetingHud() {
     const rng = heli.group.position.distanceTo(tgt.pos);
     mfdTgt.textContent = `TGT ${targets.lockedOrdinal()}/${targets.aliveCount()} ${tgt.name}`;
     mfdRng.textContent = `${rng.toFixed(0)}m`;
-    // project target to screen for the lock box
+    // project target to screen for the lock box (only while actively targeting)
     _v.copy(tgt.pos).project(camera);
-    if (_v.z < 1) {
+    if (targetMode && _v.z < 1) {
       const sx = (_v.x * 0.5 + 0.5) * window.innerWidth;
       const sy = (-_v.y * 0.5 + 0.5) * window.innerHeight;
       lockBox.style.display = 'block';
@@ -349,12 +352,11 @@ function animate() {
   }
   weapon.update(dt);
 
-  // Rockets / missiles + targeting
+  // Rockets / missiles + targeting. The sensor screen is always live, so the
+  // camera + MFD text update every frame regardless of the selected weapon.
   targets.update(dt, () => { if (targetMode) targets.cycle(); }); // auto-lock next on kill
-  if (targetMode) {
-    updateSensor();
-    updateTargetingHud();
-  }
+  updateSensor();
+  updateTargetingHud();
 
   // Countermeasures + instruments + radar
   flares.update(dt);
@@ -364,10 +366,11 @@ function animate() {
   renderer.render(scene, camera);
 
   // The sensor "video screen" is a second render into the MFD rectangle
-  if (targetMode) renderSensor();
+  renderSensor();
 
   if (firstFrame) { firstFrame = false; hideLoading(); }
 }
+targets.lockNearest(heli.group.position);  // give the always-on sensor a target
 animate();
 
 // Expose for debugging in the console
