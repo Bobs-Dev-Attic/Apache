@@ -9,6 +9,11 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.13.2] — 2026-07-04
+### Changed
+- **Radar and sensor screen aligned to the right edge** of the screen (radar on
+  top, MFD directly below), clearing the centre for the aircraft.
+
 ## [0.13.1] — 2026-07-04
 ### Changed
 - **Radar moved to the top-centre** of the screen, with the targeting sensor
