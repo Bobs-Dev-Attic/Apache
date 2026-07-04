@@ -45,9 +45,12 @@ the folder and open it.
 | `Z` / `Ctrl` | Collective down — descend |
 | `Space` | Power — fly in the tilt direction |
 | `G` | Arm / stow the main gun (M230) |
-| `R` | Rocket mode + targeting sensor screen |
-| `M` | Missile mode (guided) + targeting sensor screen |
-| `Tab` | Cycle locked target (rocket/missile mode) |
+| `R` | Rocket sensor/targeting mode |
+| `M` | Missile (guided) sensor/targeting mode |
+| `Tab` | Cycle locked target |
+| `1` / `2` | Fire rockets / missiles at the locked target |
+| `F` | Deploy flares (countermeasures) |
+| `V` | Toggle camera follow |
 | Right-click | Fire the armed weapon (gun → cursor, rockets/missiles → locked target) |
 | `F` | Toggle camera follow |
 | `H` / `?` | Toggle help |

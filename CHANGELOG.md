@@ -9,6 +9,16 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.6.0] — 2026-07-04
+### Added
+- **Flares** on `F` — dispenses a burst of bright countermeasure particles that
+  eject down and behind the aircraft and burn out.
+- **Dedicated fire keys**: `1` fires rockets and `2` fires missiles at the
+  locked target (auto-locks the nearest if nothing is locked). Right-click still
+  fires the active sensor-mode weapon.
+### Changed
+- Camera follow moved from `F` to `V` (F is now flares).
+
 ## [0.5.0] — 2026-07-04
 ### Added
 - **Guided missiles.** Press `M` for missile mode (shares the targeting sensor
