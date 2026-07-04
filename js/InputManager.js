@@ -6,23 +6,23 @@
  *
  *   { collective, pitch, roll, yaw, throttle }  (all 0..1 or -1..1)
  *
- * Keyboard : W/S pitch, A/D roll, Q/E yaw, Shift/Ctrl collective, Space power.
- * Mobile   : left virtual joystick -> pitch/roll, right buttons -> collective,
- *            yaw, and the POWER (throttle) button.
+ * Keyboard : W/S pitch, A/D roll, Q/E yaw, Shift/Ctrl collective.
+ * Mobile   : left stick -> pitch/roll (cyclic), right stick -> collective/yaw.
  *
  * "throttle" is the engine power that drives the helicopter across the ground
- * in whatever direction it is tilted — hold it to fly, release it to slow to
- * a hover. Altitude auto-holds when the collective is neutral.
+ * in whatever direction it is tilted. It is no longer a separate control — it
+ * is derived from how far the cyclic is deflected (the left stick / WASD), so
+ * tilting is what powers the aircraft. Neutral cyclic = hover; altitude
+ * auto-holds when the collective is neutral.
  */
 export class InputManager {
   constructor() {
     this.keys = new Set();
 
     // Mobile analog/state
-    this.joy = { x: 0, y: 0 };        // -1..1, y+ = up on screen
-    this.mobileCollective = 0;         // -1 / 0 / +1
-    this.mobileYaw = 0;                // -1 / 0 / +1
-    this.mobileThrottle = 0;           // 0 / 1
+    this.joy = { x: 0, y: 0 };        // -1..1, y+ = up on screen (cyclic)
+    this.mobileCollective = 0;         // -1..1 (right stick, up = climb)
+    this.mobileYaw = 0;                // -1..1 (right stick, right = yaw right)
 
     this.onToggleFollow = null;
     this.onToggleHelp = null;
@@ -43,7 +43,7 @@ export class InputManager {
   _bindKeyboard() {
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
-      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'tab'].includes(k)) {
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'tab'].includes(k)) {
         e.preventDefault();
       }
       if (k === 'f' && !e.repeat) this.onDeployFlares?.();
@@ -80,23 +80,28 @@ export class InputManager {
     let yaw = this._kb('e') - this._kb('q');
     // Collective: C / Shift up, Z / Ctrl down
     let collective = this._kb('c', 'shift') - this._kb('z', 'control');
-    // Throttle / power: Space (keyboard) or the mobile PWR button
-    let throttle = Math.max(this._kb(' '), this.mobileThrottle);
 
-    // Fold in mobile joystick (y up on screen -> forward pitch)
+    // Fold in mobile sticks (cyclic on the left, collective/yaw on the right)
     pitch += this.joy.y;
     roll += this.joy.x;
     yaw += this.mobileYaw;
     collective += this.mobileCollective;
 
-    // Clamp
     const clamp = (v) => Math.max(-1, Math.min(1, v));
+    pitch = clamp(pitch);
+    roll = clamp(roll);
+
+    // Power comes from the cyclic itself: the further it is deflected (left
+    // stick / WASD), the more engine power drives the aircraft in that
+    // direction. Neutral cyclic -> throttle 0 -> settle to a hover.
+    const throttle = Math.min(1, Math.hypot(pitch, roll));
+
     return {
-      pitch: clamp(pitch),
-      roll: clamp(roll),
+      pitch,
+      roll,
       yaw: clamp(yaw),
       collective: clamp(collective),
-      throttle: Math.max(0, Math.min(1, throttle)),
+      throttle,
     };
   }
 }

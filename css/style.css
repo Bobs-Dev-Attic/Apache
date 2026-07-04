@@ -265,7 +265,7 @@ html, body {
   gap: 10px;
   z-index: 30;
 }
-/* Throttle + fire, stacked (FIRE above PWR) just inboard of the right stick. */
+/* FIRE button, just inboard of the right collective stick. */
 #right-buttons {
   position: fixed;
   right: calc(184px + env(safe-area-inset-right));
@@ -475,39 +475,6 @@ html, body {
   pointer-events: none;
 }
 
-.power-btn {
-  width: 84px !important;
-  height: 84px !important;
-  font-size: 19px !important;
-  font-weight: 700;
-  letter-spacing: 1px;
-  border-color: rgba(255, 207, 110, 0.5) !important;
-  background: radial-gradient(circle at 35% 30%, rgba(120,92,40,0.85), rgba(50,38,18,0.7)) !important;
-}
-.power-btn.active {
-  background: radial-gradient(circle at 35% 30%, var(--accent), #a9701f) !important;
-  color: #1a140b !important;
-}
-.pad-btn {
-  width: 74px; height: 74px;
-  border-radius: 50%;
-  border: 2px solid var(--panel-line);
-  background: radial-gradient(circle at 35% 30%, rgba(70,56,28,0.75), rgba(28,22,12,0.6));
-  color: var(--hud-text);
-  font-size: 26px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  touch-action: none;
-}
-.pad-btn span { font-size: 9px; letter-spacing: 1px; margin-top: 3px; opacity: 0.7; }
-.pad-btn.active { background: radial-gradient(circle at 35% 30%, var(--accent), #a9701f); color: #1a140b; }
-
 .hidden { display: none; }
 
 /* Reduce HUD footprint on short landscape phones */
@@ -516,5 +483,4 @@ html, body {
   .hud-row span:nth-child(2) { font-size: 17px; }
   .joystick { width: 108px; height: 108px; bottom: calc(10px + env(safe-area-inset-bottom)); }
   .joystick-knob { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
-  .pad-btn { width: 62px; height: 62px; font-size: 22px; }
 }

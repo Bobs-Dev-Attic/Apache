@@ -29,7 +29,7 @@ the folder and open it.
 - **Multi-platform input**
   - **Desktop**: keyboard flight + mouse camera.
   - **Mobile**: twin on-screen joysticks (cyclic + collective/yaw) plus a
-    weapon toolbar and throttle/fire buttons, touch gestures for the camera.
+    weapon toolbar and a fire button, touch gestures for the camera.
 - **Landscape-first** — a rotate prompt appears on portrait phones.
 - **HUD** — altitude, speed, heading, rotor %.
 
@@ -38,12 +38,11 @@ the folder and open it.
 ### Flight — keyboard
 | Key | Action |
 | --- | --- |
-| `W` / `S` | Pitch forward / back (drift fwd / back) |
-| `A` / `D` | Bank left / right (drift left / right) |
+| `W` / `S` | Pitch forward / back — powers you forward / back |
+| `A` / `D` | Bank left / right — powers you sideways |
 | `Q` / `E` | Yaw (pedals) left / right |
 | `C` / `Shift` | Collective up — climb |
 | `Z` / `Ctrl` | Collective down — descend |
-| `Space` | Power — fly in the tilt direction |
 | `G` | Arm / stow the main gun (M230) |
 | `R` | Rocket sensor/targeting mode |
 | `M` | Missile (guided) sensor/targeting mode |
@@ -56,16 +55,16 @@ the folder and open it.
 | `H` / `?` | Toggle help |
 
 ### Flight — mobile
-- **Left virtual joystick** — cyclic (pitch & bank).
+- **Left virtual joystick** — cyclic: tilt to fly in that direction. The
+  further you push, the more power — there is no separate throttle button.
 - **Right virtual joystick** — collective & yaw: forward = climb, back =
   descend, left / right = yaw.
-- **PWR** — power / throttle (hold to fly in the tilt direction).
 
 ### Weapons — mobile
 - **GUN / RKT / MSL** (top-left toolbar) — select the chain gun, rockets or missiles.
 - **✦** — deploy flares (next to MSL).
 - **⟳** — cycle the locked target (rocket / missile modes).
-- **FIRE** (above PWR) — hold to fire the gun (toward screen-centre), or tap to
+- **FIRE** — hold to fire the gun (toward screen-centre), or tap to
   loose a rocket / missile at the locked target.
 - The **targeting sensor screen** under the radar is always live.
 

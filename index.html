@@ -157,9 +157,8 @@
         <div>
           <h3>Flight (Keyboard)</h3>
           <ul>
-            <li><b>W / S</b> — Tilt forward / back</li>
-            <li><b>A / D</b> — Bank left / right</li>
-            <li><b>Space</b> — Power (fly in tilt direction)</li>
+            <li><b>W / S</b> — Tilt forward / back (powers forward / back)</li>
+            <li><b>A / D</b> — Bank left / right (powers sideways)</li>
             <li><b>Q / E</b> — Yaw (pedals) left / right</li>
             <li><b>C / Shift</b> — Collective up (climb)</li>
             <li><b>Z / Ctrl</b> — Collective down (descend)</li>
@@ -181,7 +180,7 @@
           </ul>
         </div>
       </div>
-      <p class="help-mobile">On mobile: the <b>left stick</b> tilts (cyclic), the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶); hold <b>PWR</b> to fly in the tilt direction. The top-left toolbar selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares, <b>⟳</b> cycles targets); the <b>FIRE</b> button (above PWR) shoots — hold for the gun, tap for rockets/missiles. The sensor screen under the radar is always live.</p>
+      <p class="help-mobile">On mobile: the <b>left stick</b> is the cyclic — tilt it to fly in that direction (the further you push, the more power); the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶). The top-left toolbar selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares, <b>⟳</b> cycles targets); the <b>FIRE</b> button shoots — hold for the gun, tap for rockets/missiles. The sensor screen under the radar is always live.</p>
       <button id="btn-close-help" class="ui-btn wide">Got it</button>
     </div>
   </div>
@@ -200,10 +199,9 @@
       <span class="joy-cap">CLIMB · YAW</span>
     </div>
 
-    <!-- Throttle + fire (right, above the collective stick) -->
+    <!-- Fire button (right, inboard of the collective stick) -->
     <div id="right-buttons">
       <button id="btn-fire" class="fire-btn">FIRE</button>
-      <button id="btn-power" class="pad-btn power-btn">PWR<span>THROTTLE</span></button>
     </div>
 
     <!-- Weapon selector (top-left toolbar) -->
