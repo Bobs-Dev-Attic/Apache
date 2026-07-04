@@ -9,6 +9,18 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.5.0] — 2026-07-04
+### Added
+- **Guided missiles.** Press `M` for missile mode (shares the targeting sensor
+  screen and Tab cycling). Right-click launches a Hellfire-style missile that
+  lofts then homes onto the locked target with a smoke trail and a larger
+  detonation. Gun / rockets / missiles are mutually exclusive.
+- **Instrument panel.** A cockpit gauge cluster — artificial horizon, airspeed,
+  altimeter, heading compass and rotor bar — that **collapses to a mini text
+  readout** via the ▾ button.
+- **Radar scope.** A heading-up top-down scope on the right showing target
+  blips, range rings and a rotating sweep, with the locked target highlighted.
+
 ## [0.4.0] — 2026-07-04
 ### Added
 - **Rockets + targeting sensor.** Press `R` to enter rocket mode: a green

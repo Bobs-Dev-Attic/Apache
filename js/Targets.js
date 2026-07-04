@@ -18,6 +18,7 @@ export class Targets {
     this.list = [];
     this.locked = -1;
     this.rockets = [];
+    this.missiles = [];
     this.explosions = [];
     this._spawn();
   }
@@ -146,27 +147,65 @@ export class Targets {
     return true;
   }
 
-  _detonate(pos, target) {
+  _detonate(pos, target, scale = 1) {
     if (target) {
       target.alive = false;
       target.group.visible = false;
     }
     // fireball
     const fire = new THREE.Mesh(
-      new THREE.SphereGeometry(1.0, 8, 6),
+      new THREE.SphereGeometry(1.0 * scale, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0xffb44a, transparent: true, opacity: 1, depthWrite: false })
     );
     fire.position.copy(pos);
     this.scene.add(fire);
-    this.explosions.push({ mesh: fire, life: 0.5, max: 0.5, grow: 5 });
+    this.explosions.push({ mesh: fire, life: 0.5, max: 0.5, grow: 5 * scale });
     // smoke
     const smoke = new THREE.Mesh(
-      new THREE.SphereGeometry(1.2, 7, 6),
+      new THREE.SphereGeometry(1.2 * scale, 7, 6),
       new THREE.MeshBasicMaterial({ color: 0x3b342c, transparent: true, opacity: 0.9, depthWrite: false })
     );
     smoke.position.copy(pos).y += 0.6;
     this.scene.add(smoke);
-    this.explosions.push({ mesh: smoke, life: 1.1, max: 1.1, grow: 3.5, rise: 2.2 });
+    this.explosions.push({ mesh: smoke, life: 1.1, max: 1.1, grow: 3.5 * scale, rise: 2.2 });
+  }
+
+  _trailPuff(pos) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 6, 5),
+      new THREE.MeshBasicMaterial({ color: 0xbfb8ab, transparent: true, opacity: 0.7, depthWrite: false })
+    );
+    puff.position.copy(pos);
+    this.scene.add(puff);
+    this.explosions.push({ mesh: puff, life: 0.6, max: 0.6, grow: 1.6, rise: 0.6 });
+  }
+
+  /** Guided Hellfire-style missile: launches, then homes onto the target. */
+  fireMissileAt(fromPos, target) {
+    if (!target || !target.alive) return false;
+    const mesh = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xb9b2a0, flatShading: true, roughness: 0.5 });
+    const dark = this._mat(0x2a281f);
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 1.6, 6), bodyMat);
+    b.rotation.x = Math.PI / 2; mesh.add(b);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.4, 6), dark);
+    tip.rotation.x = Math.PI / 2; tip.position.z = 1.0; mesh.add(tip);
+    for (let f = 0; f < 4; f++) {
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.42, 0.34), dark);
+      fin.position.z = -0.7;
+      fin.rotation.z = (f / 4) * Math.PI * 2;
+      const pivot = new THREE.Group();
+      pivot.rotation.z = (f / 4) * Math.PI * 2;
+      fin.rotation.z = 0; fin.position.set(0.22, 0, -0.7);
+      pivot.add(fin); mesh.add(pivot);
+    }
+    mesh.position.copy(fromPos);
+    this.scene.add(mesh);
+    // initial direction: forward + slightly up (loft), then it homes
+    const dir = target.pos.clone().sub(fromPos).normalize();
+    dir.y += 0.35; dir.normalize();
+    this.missiles.push({ mesh, target, pos: fromPos.clone(), dir, speed: 26, maxSpeed: 96, turn: 2.4, trailT: 0 });
+    return true;
   }
 
   update(dt, onKill) {
@@ -190,6 +229,35 @@ export class Targets {
       r.mesh.position.copy(r.pos);
       r.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
       r.flame.material.opacity = 0.6 + Math.random() * 0.35;
+    }
+
+    // guided missiles
+    for (let i = this.missiles.length - 1; i >= 0; i--) {
+      const m = this.missiles[i];
+      const aim = m.target.alive ? m.target.pos : m.pos;
+      const desired = aim.clone().sub(m.pos);
+      const dist = desired.length();
+      if (dist <= (m.speed * dt + 0.6) || !m.target.alive) {
+        this._detonate(m.target.alive ? m.target.pos : m.pos, m.target.alive ? m.target : null, 1.6);
+        this.scene.remove(m.mesh);
+        m.mesh.traverse(o => { o.geometry?.dispose?.(); o.material?.dispose?.(); });
+        this.missiles.splice(i, 1);
+        if (onKill) onKill();
+        continue;
+      }
+      desired.normalize();
+      // steer current heading toward the target with a limited turn rate
+      const ang = m.dir.angleTo(desired);
+      const step = m.turn * dt;
+      if (ang <= step || ang < 1e-4) m.dir.copy(desired);
+      else m.dir.lerp(desired, step / ang).normalize();
+      m.speed = Math.min(m.maxSpeed, m.speed + 70 * dt);
+      m.pos.addScaledVector(m.dir, m.speed * dt);
+      m.mesh.position.copy(m.pos);
+      m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), m.dir);
+      // smoke trail
+      m.trailT -= dt;
+      if (m.trailT <= 0) { this._trailPuff(m.pos); m.trailT = 0.028; }
     }
 
     // explosions
