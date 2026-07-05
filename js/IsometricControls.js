@@ -40,24 +40,26 @@ export class IsometricControls {
     this.followLerp = 0.08;
     this.panOffset = new THREE.Vector3(0, 0, 0);
 
-    // Camera view presets cycled by the view button. `az` is a fixed world
-    // azimuth; `rel` (radians) is an offset from "directly behind" that tracks
-    // the aircraft's heading, so those views stay oriented as it turns.
-    // Ordered: overview -> chase -> top-down -> around the rear -> sides -> low front.
+    // Camera view presets, laid out as a 3x3 "camera compass" around the
+    // aircraft (row-major matches the on-screen picker grid). `az` is a fixed
+    // world azimuth; `rel` (radians) is an offset from "directly behind" that
+    // tracks the aircraft's heading, so those views stay oriented as it turns.
+    //   behind:  REAR L   REAR    REAR R
+    //   sides:   SIDE L   TOP     SIDE R
+    //   front:   FRONT L  FRONT   FRONT R
     const HALF = Math.PI / 2, QTR = Math.PI / 4;
     this.views = [
-      { name: 'ISO',    az: Math.PI / 4, polar: 0.6155, zoom: 1.0 },
-      { name: 'CHASE',  rel: 0,          polar: 0.95,   zoom: 1.15 },
-      { name: 'TOP',    az: Math.PI / 4, polar: this.minPolar, zoom: 1.0 },
-      { name: 'REAR L', rel: -QTR,       polar: 1.12,   zoom: 1.0 },
-      { name: 'REAR',   rel: 0,          polar: 1.28,   zoom: 1.0 },
-      { name: 'REAR R', rel: QTR,        polar: 1.12,   zoom: 1.0 },
-      { name: 'SIDE L', rel: -HALF,      polar: 1.2,    zoom: 1.0 },
-      { name: 'SIDE R', rel: HALF,       polar: 1.2,    zoom: 1.0 },
-      { name: 'LOW L',  rel: -3 * QTR,   polar: 1.28,   zoom: 1.0 },
-      { name: 'LOW R',  rel: 3 * QTR,    polar: 1.28,   zoom: 1.0 },
+      { name: 'REAR L',  rel: -QTR,       polar: 1.12,   zoom: 1.0 },
+      { name: 'REAR',    rel: 0,          polar: 1.05,   zoom: 1.1 },
+      { name: 'REAR R',  rel: QTR,        polar: 1.12,   zoom: 1.0 },
+      { name: 'SIDE L',  rel: -HALF,      polar: 1.2,    zoom: 1.0 },
+      { name: 'TOP',     az: Math.PI / 4, polar: this.minPolar, zoom: 1.0 },
+      { name: 'SIDE R',  rel: HALF,       polar: 1.2,    zoom: 1.0 },
+      { name: 'FRONT L', rel: -3 * QTR,   polar: 1.22,   zoom: 1.0 },
+      { name: 'FRONT',   rel: Math.PI,    polar: 1.15,   zoom: 1.0 },
+      { name: 'FRONT R', rel: 3 * QTR,    polar: 1.22,   zoom: 1.0 },
     ];
-    this.viewIndex = 0;
+    this.viewIndex = 1;   // default: REAR (behind, chase)
     this._headingTrack = false;   // true while a heading-relative view is active
     this._azRel = 0;
     this.getHeading = null;       // () => aircraft heading (radians)
@@ -89,7 +91,7 @@ export class IsometricControls {
 
   setFollowObject(obj) { this.followObject = obj; }
 
-  recenter() { this.setView(0); }
+  recenter() { this.setView(1); }   // default = REAR
 
   /** Advance to the next camera view preset (wraps around). */
   cycleView() { this.setView((this.viewIndex + 1) % this.views.length); }

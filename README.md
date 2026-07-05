@@ -90,10 +90,16 @@ the folder and open it.
 - **Two-finger drag** — pan.
 
 ### Camera views
-The **🎥 button** (right of the cyclic stick) cycles through preset views: ISO
-(default), CHASE, TOP-DOWN, REAR L / REAR / REAR R, SIDE L / SIDE R and LOW L /
-LOW R. Chase, rear and side views track the aircraft's heading; rotating the
-camera by hand returns to free-look.
+A **3×3 view picker** (top-left) selects a camera around the aircraft — a compass
+of presets:
+
+| REAR L | REAR | REAR R |
+| :---: | :---: | :---: |
+| **SIDE L** | **TOP** | **SIDE R** |
+| **FRONT L** | **FRONT** | **FRONT R** |
+
+The default is **REAR** (chase-from-behind). All but TOP track the aircraft's
+heading; rotating the camera by hand returns to free-look.
 
 ## Running locally
 
