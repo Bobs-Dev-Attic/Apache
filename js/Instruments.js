@@ -1,16 +1,14 @@
 /**
- * Instruments — cockpit gauge cluster with a collapsible mini readout.
- * -------------------------------------------------------------------
- * Full mode shows graphical SVG gauges (artificial horizon, airspeed,
- * altimeter, heading compass, rotor bar). The collapse button shrinks the
- * panel to a compact text readout.
+ * Instruments — a cockpit gauge cluster docked at the bottom of the screen.
+ * ------------------------------------------------------------------------
+ * Graphical SVG gauges: artificial horizon, airspeed (mph), altimeter (ft),
+ * heading compass, rotor bar and fuel bar.
  */
 const NS = 'http://www.w3.org/2000/svg';
 
 export class Instruments {
   constructor() {
     this.root = document.getElementById('instruments');
-    this.collapsed = false;
 
     this.aiRoll = document.getElementById('ai-roll');
     this.aiPitch = document.getElementById('ai-pitch');
@@ -22,23 +20,10 @@ export class Instruments {
     this.hdgVal = document.getElementById('hdg-val');
     this.rtrBar = document.getElementById('rtr-bar');
     this.rtrVal = document.getElementById('rtr-val');
-
-    this.mAlt = document.getElementById('hud-alt');
-    this.mSpd = document.getElementById('hud-spd');
-    this.mHdg = document.getElementById('hud-hdg');
-    this.mRtr = document.getElementById('hud-rtr');
-
-    this.btn = document.getElementById('instr-collapse');
-    this.btn.addEventListener('click', () => this.toggle());
+    this.fuelBar = document.getElementById('fuel-bar');
+    this.fuelVal = document.getElementById('fuel-val');
 
     this._buildCompass();
-  }
-
-  toggle() {
-    this.collapsed = !this.collapsed;
-    this.root.classList.toggle('collapsed', this.collapsed);
-    this.btn.textContent = this.collapsed ? '▸' : '▾';
-    this.btn.title = this.collapsed ? 'Expand instruments' : 'Collapse instruments';
   }
 
   _buildCompass() {
@@ -74,13 +59,6 @@ export class Instruments {
     const hdg = heli.headingDeg;
     const rtr = heli.rotorSpeed * 100;
 
-    // Mini text is always kept in sync (cheap)
-    this.mAlt.textContent = alt.toFixed(0);
-    this.mSpd.textContent = spd.toFixed(0);
-    this.mHdg.textContent = hdg.toFixed(0).padStart(3, '0');
-    this.mRtr.textContent = rtr.toFixed(0);
-    if (this.collapsed) return;
-
     // Artificial horizon: bank rolls it, pitch shifts it.
     const rollDeg = -(heli.bank || 0) * 180 / Math.PI;
     const pitchDeg = (heli.pitch || 0) * 180 / Math.PI; // + = nose down
@@ -105,5 +83,13 @@ export class Instruments {
     this.rtrBar.setAttribute('y', (16 + (full - h)).toFixed(1));
     this.rtrBar.setAttribute('height', h.toFixed(1));
     this.rtrVal.textContent = rtr.toFixed(0);
+
+    // Fuel bar (turns red and blinks toward empty)
+    const fuel = heli.fuelPct;
+    const fh = Math.max(0.5, fuel / 100 * full);
+    this.fuelBar.setAttribute('y', (16 + (full - fh)).toFixed(1));
+    this.fuelBar.setAttribute('height', fh.toFixed(1));
+    this.fuelVal.textContent = fuel.toFixed(0);
+    this.fuelBar.classList.toggle('low', fuel <= 20);
   }
 }

@@ -28,6 +28,8 @@ export class Weapon {
     this.tracers = [];
     this.impacts = [];
     this.shotsFired = 0;
+    this.rounds = Infinity;        // remaining 30mm rounds (set by main)
+    this.unlimited = false;
 
     this._tmpFrom = new THREE.Vector3();
     this._tmpDir = new THREE.Vector3();
@@ -144,7 +146,9 @@ export class Weapon {
     this._cooldown -= dt;
     if (this.firing && this.armed && this.hasAim) {
       while (this._cooldown <= 0) {
+        if (!this.unlimited && this.rounds <= 0) { this.firing = false; break; }  // out of rounds
         this._spawnTracer();
+        if (!this.unlimited) this.rounds--;
         this._cooldown += 1 / this.fireRate;
       }
     } else if (this._cooldown < 0) {

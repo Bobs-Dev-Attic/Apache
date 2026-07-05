@@ -28,7 +28,7 @@ export class MobileControls {
     });
 
     this._bindWeapons();
-    this._bindTargetScreenSwipe();
+    this._bindTargetScreenTap();
     this.setWeaponState(null);   // nothing selected at start
   }
 
@@ -46,9 +46,6 @@ export class MobileControls {
     }
     // FIRE is only meaningful once a weapon is selected.
     document.getElementById('btn-fire').classList.toggle('disabled', !mode);
-    // CYCLE only cycles targets in a sensor (rocket/missile) mode.
-    document.getElementById('btn-cycle').classList.toggle('disabled',
-      mode !== 'rockets' && mode !== 'missiles');
   }
 
   /**
@@ -149,7 +146,6 @@ export class MobileControls {
     this._tap('btn-gun',      () => this.input.onToggleGun?.());
     this._tap('btn-rockets',  () => this.input.onToggleRockets?.());
     this._tap('btn-missiles', () => this.input.onToggleMissiles?.());
-    this._tap('btn-cycle',    () => this.input.onCycleTarget?.());
     this._tap('btn-flares',   () => this.input.onDeployFlares?.());
 
     // Context-sensitive FIRE: hold to fire the gun, tap to loose a rocket/missile.
@@ -160,40 +156,31 @@ export class MobileControls {
   }
 
   /**
-   * Swiping horizontally across the always-on sensor screen cycles the locked
-   * target — swipe right for the next target, left for the previous one (the
-   * same action as the Tab key / CYCLE button).
+   * Tapping / clicking the always-on sensor screen cycles to the next target
+   * (replaces the old swipe gesture and the CYCLE button). A small movement
+   * tolerance keeps a drag from counting as a tap.
    */
-  _bindTargetScreenSwipe() {
+  _bindTargetScreenTap() {
     const mfd = document.getElementById('mfd');
     if (!mfd) return;
-    const H_MIN = 28;     // min horizontal travel to count as a swipe
-    let x0 = null, y0 = null;
+    let x0 = null, y0 = null, moved = false;
 
-    const start = (cx, cy) => { x0 = cx; y0 = cy; };
-    const end = (cx, cy) => {
+    const down = (cx, cy) => { x0 = cx; y0 = cy; moved = false; };
+    const move = (cx, cy) => {
       if (x0 === null) return;
-      const dx = cx - x0, dy = cy - y0;
+      if (Math.abs(cx - x0) > 12 || Math.abs(cy - y0) > 12) moved = true;
+    };
+    const up = () => {
+      if (x0 !== null && !moved) this.input.onSwipeTarget?.(1);  // next target
       x0 = y0 = null;
-      // horizontal-dominant swipe past the threshold
-      if (Math.abs(dx) > H_MIN && Math.abs(dx) > Math.abs(dy)) {
-        this.input.onSwipeTarget?.(dx > 0 ? 1 : -1);
-      }
     };
 
-    mfd.addEventListener('touchstart', (e) => {
-      const t = e.changedTouches[0];
-      start(t.clientX, t.clientY);
-      e.preventDefault();
-    }, { passive: false });
-    mfd.addEventListener('touchend', (e) => {
-      const t = e.changedTouches[0];
-      end(t.clientX, t.clientY);
-      e.preventDefault();
-    }, { passive: false });
-
-    // Mouse fallback for desktop testing / touch-emulation
-    mfd.addEventListener('mousedown', (e) => start(e.clientX, e.clientY));
-    mfd.addEventListener('mouseup', (e) => end(e.clientX, e.clientY));
+    mfd.addEventListener('touchstart', (e) => { const t = e.changedTouches[0]; down(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+    mfd.addEventListener('touchmove', (e) => { const t = e.changedTouches[0]; move(t.clientX, t.clientY); }, { passive: false });
+    mfd.addEventListener('touchend', (e) => { up(); e.preventDefault(); }, { passive: false });
+    // Mouse for desktop
+    mfd.addEventListener('mousedown', (e) => down(e.clientX, e.clientY));
+    mfd.addEventListener('mousemove', (e) => move(e.clientX, e.clientY));
+    mfd.addEventListener('mouseup', up);
   }
 }

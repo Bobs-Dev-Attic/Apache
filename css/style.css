@@ -73,82 +73,52 @@ html, body {
 /* ---------- HUD ---------- */
 #hud {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom));
+  bottom: env(safe-area-inset-bottom);
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
   pointer-events: none;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;   /* panel at the very bottom, status above */
   align-items: center;
   gap: 6px;
 }
-.hud-panel {
-  background: var(--panel);
-  border: 1px solid var(--panel-line);
-  border-radius: 12px;
-  padding: 10px 14px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  min-width: 132px;
-}
-.hud-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.6;
-}
-.hud-label {
-  font-size: 11px;
-  letter-spacing: 2px;
-  opacity: 0.65;
-  width: 34px;
-}
-.hud-row span:nth-child(2) {
-  font-size: 20px;
-  font-weight: 700;
-  margin-left: auto;
-  color: var(--accent);
-}
-.hud-unit { font-size: 11px; opacity: 0.6; width: 30px; }
 
-/* ---------- Instrument panel ---------- */
+/* ---------- Instrument panel (docked to the bottom) ---------- */
 #instruments {
-  position: relative;
   background: var(--panel);
   border: 1px solid var(--panel-line);
-  border-radius: 12px;
-  padding: 8px 10px;
+  border-bottom: none;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  padding: 9px 18px 6px;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
-.instr-collapse {
-  position: absolute;
-  top: 4px; right: 4px;
-  width: 22px; height: 22px;
-  pointer-events: auto;
-  border: 1px solid var(--panel-line);
-  border-radius: 6px;
-  background: rgba(0,0,0,0.25);
-  color: var(--hud-text);
-  font-size: 12px; line-height: 1;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 2;
-}
-.instr-full { display: flex; align-items: flex-end; gap: 4px; }
-.instr-mini { display: none; }
-#instruments.collapsed .instr-full { display: none; }
-#instruments.collapsed .instr-mini { display: block; }
-#instruments.collapsed { padding: 0; background: none; border: none; backdrop-filter: none; }
-#instruments.collapsed .instr-collapse { top: 6px; right: 6px; }
+.instr-full { display: flex; align-items: flex-end; gap: 8px; }
 
-.gauge { width: 68px; height: 68px; }
-.gauge.rtr { width: 30px; height: 68px; }
+.gauge { width: 80px; height: 80px; }
+.gauge.rtr { width: 34px; height: 80px; }
 .gauge .g-val { fill: var(--accent); font: 700 15px "Segoe UI", sans-serif; text-anchor: middle; }
 .gauge .g-label { fill: rgba(255,233,194,0.6); font: 600 8px "Segoe UI", sans-serif; letter-spacing: 1px; text-anchor: middle; }
 .gauge.rtr .g-label { font-size: 7px; }
+#fuel-bar.low { fill: #ff5a3c; }
+
+/* Ammunition readout */
+#ammo-row {
+  display: flex; gap: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.ammo { display: flex; gap: 5px; align-items: baseline; }
+.ammo b { font-size: 9px; letter-spacing: 1.5px; opacity: 0.55; font-weight: 700; }
+.ammo i { font-style: normal; font-size: 13px; font-weight: 700; color: var(--accent); }
+.ammo.empty i { color: #ff6a4a; }
+.ammo.sel { text-shadow: 0 0 8px rgba(255,207,110,0.5); }
+.ammo.sel b { opacity: 1; }
 
 /* ---------- Radar scope ---------- */
 #radar {
@@ -222,8 +192,44 @@ html, body {
 .ui-btn:active { transform: scale(0.94); }
 .ui-btn.wide { width: auto; padding: 0 22px; height: 44px; font-size: 15px; letter-spacing: 1px; }
 
-/* ---------- Help overlay ---------- */
-#help-overlay {
+/* ---------- Menu (top-left) ---------- */
+#menu {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  z-index: 60;
+}
+#menu-panel {
+  margin-top: 8px;
+  display: flex; flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  min-width: 168px;
+}
+#menu-panel.hidden { display: none; }
+.menu-item {
+  background: none; border: none;
+  color: var(--hud-text);
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 14px; letter-spacing: 1px;
+  cursor: pointer;
+}
+.menu-item + .menu-item { border-top: 1px solid var(--panel-line); }
+.menu-item:hover { background: rgba(60, 46, 22, 0.55); color: var(--accent); }
+.opt {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; letter-spacing: 1px;
+  margin: 12px 0; cursor: pointer;
+}
+.opt input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+/* ---------- Help / Options overlay ---------- */
+#help-overlay, #options-overlay {
   position: fixed;
   inset: 0;
   background: rgba(10, 8, 4, 0.72);
@@ -234,7 +240,7 @@ html, body {
   z-index: 60;
   padding: 20px;
 }
-#help-overlay.hidden { display: none; }
+#help-overlay.hidden, #options-overlay.hidden { display: none; }
 .help-card {
   background: linear-gradient(160deg, #2b2213, #1a140b);
   border: 1px solid var(--panel-line);
@@ -275,24 +281,16 @@ html, body {
 
 /* ---------- Mobile weapon controls ---------- */
 /* Weapon selector: a 2x2 grid (GUN/RKT/MSL/FLARE) sitting just above the
-   left cyclic stick, with a full-width CYCLE bar on top. */
+   left cyclic stick. */
 #weapon-select {
   position: fixed;
   left: calc(24px + env(safe-area-inset-left));
-  bottom: calc(168px + env(safe-area-inset-bottom));
+  bottom: calc(150px + env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: repeat(2, auto);
   gap: 10px;
   z-index: 30;
 }
-#btn-cycle {
-  grid-column: 1 / -1;
-  width: auto;
-  height: 44px;
-  flex-direction: row;
-  gap: 6px;
-}
-#btn-cycle span { margin-top: 0; }
 /* FIRE button, just inboard of the right collective stick. */
 #right-buttons {
   position: fixed;
@@ -305,6 +303,7 @@ html, body {
   z-index: 31;
 }
 .wpn-btn {
+  position: relative;
   width: 60px; height: 60px;
   border-radius: 12px;
   border: 2px solid var(--panel-line);
@@ -325,6 +324,20 @@ html, body {
 }
 .wpn-btn.tapped { transform: scale(0.92); }
 .wpn-btn.disabled { opacity: 0.3; }
+/* rounds-remaining badge */
+.wpn-ct {
+  position: absolute;
+  top: -6px; right: -6px;
+  min-width: 16px; height: 16px; padding: 0 3px;
+  border-radius: 8px;
+  background: rgba(20,16,8,0.9);
+  border: 1px solid var(--panel-line);
+  color: var(--accent);
+  font-size: 9px; font-weight: 700; letter-spacing: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.wpn-btn.empty { opacity: 0.4; }
+.wpn-btn.empty .wpn-ct { color: #ff6a4a; border-color: rgba(255,90,60,0.6); }
 .fire-btn {
   width: 88px; height: 88px;
   border-radius: 50%;
@@ -515,8 +528,13 @@ html, body {
 
 /* Reduce HUD footprint on short landscape phones */
 @media (max-height: 430px) {
-  .hud-panel { padding: 7px 11px; min-width: 116px; }
-  .hud-row span:nth-child(2) { font-size: 17px; }
+  /* keep the wider bottom panel from crowding the twin sticks */
+  #instruments { padding: 5px 10px 4px; gap: 2px; }
+  .instr-full { gap: 4px; }
+  .gauge { width: 58px; height: 58px; }
+  .gauge.rtr { width: 26px; height: 58px; }
+  #ammo-row { gap: 10px; }
+  .ammo i { font-size: 12px; }
   .joystick { width: 108px; height: 108px; bottom: calc(10px + env(safe-area-inset-bottom)); }
   .joystick-knob { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
 }
