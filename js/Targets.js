@@ -375,20 +375,21 @@ export class Targets {
     this.scorches.push({ mesh: decal, t: 0, fadeIn: 0.5, opacity: 0.78 });
   }
 
-  _trailPuff(pos) {
+  _trailPuff(pos, hot = false) {
     const puff = new THREE.Mesh(
-      new THREE.SphereGeometry(0.22, 6, 5),
-      new THREE.MeshBasicMaterial({ color: 0xbfb8ab, transparent: true, opacity: 0.7, depthWrite: false })
+      new THREE.SphereGeometry(hot ? 0.3 : 0.22, 6, 5),
+      new THREE.MeshBasicMaterial({ color: hot ? 0xf2ead8 : 0xbfb8ab, transparent: true, opacity: hot ? 0.85 : 0.7, depthWrite: false })
     );
     puff.position.copy(pos);
     this.scene.add(puff);
-    this.explosions.push({ mesh: puff, life: 0.6, max: 0.6, grow: 1.6, rise: 0.6 });
+    this.explosions.push({ mesh: puff, life: hot ? 0.8 : 0.6, max: hot ? 0.8 : 0.6, grow: hot ? 2.2 : 1.6, rise: 0.5 });
   }
 
   /**
-   * Guided top-attack missile. It drops off the rail, lights the motor and
-   * climbs to a high cruise altitude above the target, then pitches over and
-   * dives straight down onto it (Javelin-style top attack).
+   * Guided top-attack missile. It drops off the rail, the motor lights (exhaust
+   * shoots out) and it flies forward a little, then climbs steeply to a high
+   * cruise altitude, flies to directly over the target and dives straight down
+   * onto it from above (Javelin-style top attack).
    */
   fireMissileAt(fromPos, target) {
     if (!target || !target.alive) return false;
@@ -408,18 +409,25 @@ export class Targets {
       fin.rotation.z = 0; fin.position.set(0.22, 0, -0.7);
       pivot.add(fin); mesh.add(pivot);
     }
+    // rocket motor exhaust plume at the tail (nose is +z), lit once the motor fires
+    const exhaust = new THREE.Mesh(
+      new THREE.ConeGeometry(0.16, 1.1, 6),
+      new THREE.MeshBasicMaterial({ color: 0xffb24a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    exhaust.rotation.x = -Math.PI / 2;   // point out the back
+    exhaust.position.z = -1.35;
+    mesh.add(exhaust);
     mesh.position.copy(fromPos);
     this.scene.add(mesh);
-    // Horizontal bearing to the target (used to nudge the initial drop forward).
+    // Horizontal bearing to the target (used to aim the boost + climb).
     const toTarget = target.pos.clone().sub(fromPos);
     const launchFwd = new THREE.Vector3(toTarget.x, 0, toTarget.z).normalize();
-    // Starts by dropping off the rail: a shallow forward dip before the motor
-    // lights (a steep nose-down would be unrecoverable at this turn rate).
+    // Falls off the rail nose-down before the motor lights.
     const dir = new THREE.Vector3(launchFwd.x, -0.6, launchFwd.z).normalize();
     this.missiles.push({
-      mesh, target, pos: fromPos.clone(), dir,
-      speed: 14, maxSpeed: 92, turn: 3.2, trailT: 0,
-      phase: 'drop', phaseT: 0, cruise: 30, launchFwd,
+      mesh, exhaust, target, pos: fromPos.clone(), dir,
+      speed: 12, maxSpeed: 94, turn: 3.4, trailT: 0,
+      phase: 'drop', phaseT: 0, cruise: 28, launchFwd,
     });
     return true;
   }
@@ -453,9 +461,10 @@ export class Targets {
       const tpos = m.target.alive ? m.target.pos : m.pos;
       const distToTarget = m.pos.distanceTo(tpos);
 
-      // detonate on impact (only reachable in the terminal dive) or if the
-      // target is already gone
-      if (distToTarget <= (m.speed * dt + 0.6) || !m.target.alive) {
+      // detonate on impact (proximity fuze — the missile is fast, so the
+      // trigger radius includes the target size and a frame of travel) or if
+      // the target is already gone
+      if (distToTarget <= (m.target.radius || 2) + m.speed * dt + 0.6 || !m.target.alive) {
         this._detonate(m.target.alive ? m.target.pos : m.pos, m.target.alive ? m.target : null, 1.6);
         this.scene.remove(m.mesh);
         m.mesh.traverse(o => { o.geometry?.dispose?.(); o.material?.dispose?.(); });
@@ -467,45 +476,64 @@ export class Targets {
       m.phaseT += dt;
       const dx = tpos.x - m.pos.x, dz = tpos.z - m.pos.z;
       const horiz = Math.hypot(dx, dz);
+      const apexY = tpos.y + m.cruise;
+      const up = apexY - m.pos.y;
       const desired = new THREE.Vector3();
       if (m.phase === 'drop') {
-        // shallow forward dip off the rail for a beat, then light the motor
-        desired.set(m.launchFwd.x, -0.6, m.launchFwd.z);
-        if (m.phaseT >= 0.28) { m.phase = 'climb'; m.phaseT = 0; }
+        // 1) fall off the rail nose-down for a beat, then light the motor
+        desired.set(m.launchFwd.x, -0.55, m.launchFwd.z);
+        if (m.phaseT >= 0.25) { m.phase = 'boost'; m.phaseT = 0; }
+      } else if (m.phase === 'boost') {
+        // 2) motor lit — shoot forward with a slight climb for a moment
+        desired.set(m.launchFwd.x, 0.45, m.launchFwd.z);
+        if (m.phaseT >= 0.5) { m.phase = 'climb'; m.phaseT = 0; }
       } else if (m.phase === 'climb') {
-        // Climb hard to a high cruise altitude. While still gaining height the
-        // horizontal pull is throttled so it goes steeply UP first; once high
-        // it levels off and cruises over the target before tipping into a dive.
-        const up = (tpos.y + m.cruise) - m.pos.y;
-        if (up > 4) {
-          const hs = Math.min(1, 10 / (horiz + 0.01));  // limit sideways drift while climbing
-          desired.set(dx * hs, Math.max(up, 22), dz * hs);
-        } else {
-          desired.set(dx, up, dz);
-        }
-        // tip over once at altitude and roughly over the target, if it has
-        // clearly overshot the apex, or after a safety timeout
-        if ((up <= 3 && horiz < 16) || up < -3 || m.phaseT > 6) { m.phase = 'dive'; m.phaseT = 0; }
-      } else { // dive straight down onto the target
-        desired.subVectors(tpos, m.pos);
+        // 3) climb steeply to the cruise altitude; the horizontal pull is
+        // throttled so it gains height first rather than flying across. The
+        // vertical component tapers toward the apex to limit the overshoot.
+        const hs = Math.min(1, 7 / (horiz + 0.01));
+        desired.set(dx * hs, Math.max(up, 6), dz * hs);
+        if (up <= 5 || m.phaseT > 6) { m.phase = 'cruise'; m.phaseT = 0; }
+      } else if (m.phase === 'cruise') {
+        // 4) hold altitude and fly to directly over the target
+        desired.set(dx, up * 0.6, dz);
+        if (horiz < 3 || m.phaseT > 10) { m.phase = 'dive'; m.phaseT = 0; }
+      } else {
+        // 5) terminal — drop straight down onto the target from above. Vertical
+        // dominates so any small horizontal error is corrected while plunging.
+        desired.set(dx, -Math.max(horiz + 10, 24), dz);
       }
       desired.normalize();
 
-      // steer current heading toward the desired direction with a limited turn
-      // rate; the terminal dive pitches over faster
+      // steer toward the desired direction with a limited turn rate; the
+      // pitch-over into the vertical dive is much snappier
       const ang = m.dir.angleTo(desired);
-      const turn = (m.phase === 'dive' ? m.turn * 2.4 : m.turn) * dt;
+      const turn = (m.phase === 'dive' ? m.turn * 3.4 : m.turn) * dt;
       if (ang <= turn || ang < 1e-4) m.dir.copy(desired);
       else m.dir.lerp(desired, turn / ang).normalize();
 
-      // gentle during the drop, then accelerate to cruise once the motor lights
-      m.speed = m.phase === 'drop' ? 14 : Math.min(m.maxSpeed, m.speed + 70 * dt);
+      // Speed by phase: full thrust on boost/climb, brake as it arrives
+      // directly overhead, then a controlled plunge so it can steer straight
+      // down onto the target instead of overshooting past it.
+      let tgtSpeed = m.maxSpeed;
+      if (m.phase === 'drop') tgtSpeed = 12;
+      else if (m.phase === 'cruise' && horiz < 50) tgtSpeed = 30;
+      else if (m.phase === 'dive') tgtSpeed = 58;
+      m.speed += (tgtSpeed - m.speed) * Math.min(1, dt * 3);
       m.pos.addScaledVector(m.dir, m.speed * dt);
       m.mesh.position.copy(m.pos);
       m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), m.dir);
-      // smoke trail
+
+      // exhaust plume: bright while the motor burns (boost + climb), then coasts
+      const motorOn = m.phase === 'boost' || m.phase === 'climb';
+      m.exhaust.material.opacity = motorOn ? 0.7 + Math.random() * 0.3 : Math.max(0, m.exhaust.material.opacity - dt * 3);
+      m.exhaust.scale.setScalar(motorOn ? 0.8 + Math.random() * 0.6 : 0.5);
+      // smoke trail — thick white motor smoke while burning, thin after
       m.trailT -= dt;
-      if (m.trailT <= 0) { this._trailPuff(m.pos); m.trailT = 0.028; }
+      if (m.trailT <= 0) {
+        this._trailPuff(m.pos, motorOn);
+        m.trailT = motorOn ? 0.02 : 0.05;
+      }
     }
 
     // explosions
