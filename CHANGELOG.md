@@ -9,6 +9,23 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.17.0] — 2026-07-05
+### Added
+- **Vehicle damage model.** Targets now have hit points and take cumulative
+  gun damage. A health bar floats above any hurt target; as damage mounts a
+  vehicle starts **smoking**, then **catches fire** (throwing charred pieces),
+  and at zero HP **explodes into a smoldering wreck**. Rockets and missiles are
+  still one-shot lethal.
+- **Tracer ricochets.** Chain-gun rounds that strike a vehicle now spark and
+  ricochet off the armour (and deal damage) instead of passing through.
+- **Fleeing soldiers.** Survivors bail out of a destroyed vehicle and flee —
+  most **run**, some are wounded and **crawl**, and some are **on fire**,
+  sprinting erratically before collapsing. They follow the terrain and animate
+  (pumping limbs, smoke trails) before dispersing.
+### Changed
+- **Gun sight lags the cursor.** The reticle/aim now eases toward the pointer
+  (the turret is heavy) instead of snapping to it.
+
 ## [0.16.0] — 2026-07-05
 ### Added
 - **Fuel.** Flying and moving now burn fuel. A real AH-64 carries ~370 US gal

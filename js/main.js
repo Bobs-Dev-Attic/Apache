@@ -10,6 +10,7 @@ import { Targets } from './Targets.js';
 import { Instruments } from './Instruments.js';
 import { Radar } from './Radar.js';
 import { Flares } from './Flares.js';
+import { Soldiers } from './Soldiers.js';
 
 /* ------------------------------------------------------------------ *
  * Renderer & scene
@@ -113,14 +114,19 @@ input.onToggleGun = () => {
   if (weapon.armed && targetMode) setTargetMode(null);  // gun & rockets/missiles are exclusive
   controls.panEnabled = !weapon.armed && !targetMode;   // right-drag fires instead of panning
   if (!weapon.armed) { weapon.setFiring(false); mobileFiring = false; }
-  // Park the reticle at the current cursor (screen-centre on touch, where the
-  // gun fires from since there is no pointer to track).
-  if (weapon.armed) reticle.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+  // Snap the lagged sight to the cursor when the gun comes up.
+  if (weapon.armed) {
+    aimScreen.x = cursor.x; aimScreen.y = cursor.y;
+    reticle.style.transform = `translate(${cursor.x}px, ${cursor.y}px)`;
+  }
   mobile.setWeaponState(weapon.armed ? 'gun' : (targetMode || null));
 };
 
 // Cursor tracking + right-button firing (desktop)
 const cursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+// The gun reticle/aim lags the cursor — the turret is heavy, so the sight
+// eases toward the pointer rather than snapping to it.
+const aimScreen = { x: cursor.x, y: cursor.y };
 let rightDown = false;
 let mobileFiring = false;   // gun trigger held via the on-screen FIRE button
 const raycaster = new THREE.Raycaster();
@@ -128,10 +134,10 @@ const ndc = new THREE.Vector2();
 const aimPoint = new THREE.Vector3();
 
 // Use pointer events (the controls preventDefault() pointerdown, which would
-// otherwise suppress the compatibility mouse events).
+// otherwise suppress the compatibility mouse events). The reticle itself is
+// moved in the animation loop so it trails the cursor.
 canvas.addEventListener('pointermove', (e) => {
   cursor.x = e.clientX; cursor.y = e.clientY;
-  reticle.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
 });
 canvas.addEventListener('pointerdown', (e) => {
   if (e.button === 2 && weapon.armed) rightDown = true;
@@ -139,10 +145,10 @@ canvas.addEventListener('pointerdown', (e) => {
 window.addEventListener('pointerup', (e) => { if (e.button === 2) rightDown = false; });
 window.addEventListener('blur', () => { rightDown = false; });
 
-// Project the cursor onto the terrain (fallback: far along the ray) → aim point
+// Project the lagged sight onto the terrain (fallback: far along the ray) → aim point
 function updateAim() {
-  ndc.x = (cursor.x / window.innerWidth) * 2 - 1;
-  ndc.y = -(cursor.y / window.innerHeight) * 2 + 1;
+  ndc.x = (aimScreen.x / window.innerWidth) * 2 - 1;
+  ndc.y = -(aimScreen.y / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(ndc, camera);
   const hits = raycaster.intersectObject(env.terrain, false);
   if (hits.length) {
@@ -157,6 +163,42 @@ function updateAim() {
  * Rockets + targeting sensor (MFD "video screen")
  * ------------------------------------------------------------------ */
 const targets = new Targets(scene, env);
+
+// Dismounted survivors flee a destroyed vehicle.
+const soldiers = new Soldiers(scene, env);
+targets.onUnitDestroyed = (pos, count, groundY) => soldiers.spawn(pos, count, groundY);
+
+// The gun damages targets its tracers strike (30mm does ~5 HP per round).
+weapon.getTargets = () => targets.list;
+weapon.onTargetHit = (tgt, point) => targets.damage(tgt, 5, point);
+
+// A little health bar floats above any target that has taken damage.
+const dmgLayer = document.getElementById('dmg-layer');
+for (const t of targets.list) {
+  const bar = document.createElement('div');
+  bar.className = 'dmg-bar';
+  const fill = document.createElement('i');
+  bar.appendChild(fill);
+  dmgLayer.appendChild(bar);
+  t._bar = bar; t._barFill = fill;
+}
+const _bv = new THREE.Vector3();
+function updateDamageBars() {
+  for (const t of targets.list) {
+    const bar = t._bar;
+    if (!bar) continue;
+    if (!t.alive || t.hp >= t.maxHp) { bar.style.display = 'none'; continue; }
+    _bv.copy(t.pos); _bv.y += 3; _bv.project(camera);
+    if (_bv.z > 1) { bar.style.display = 'none'; continue; }
+    const sx = (_bv.x * 0.5 + 0.5) * window.innerWidth;
+    const sy = (-_bv.y * 0.5 + 0.5) * window.innerHeight;
+    bar.style.display = 'block';
+    bar.style.transform = `translate(${sx}px, ${sy}px)`;
+    const frac = Math.max(0, t.hp / t.maxHp);
+    t._barFill.style.width = (frac * 100) + '%';
+    t._barFill.style.background = `hsl(${(frac * 120).toFixed(0)}, 85%, 48%)`;
+  }
+}
 
 // A narrow-FOV sensor camera whose feed is rendered into the MFD rectangle.
 const sensorCam = new THREE.PerspectiveCamera(16, 300 / 188, 0.5, 1200);
@@ -445,8 +487,12 @@ function animate() {
   controls.update();
   env.updateSun(controls.target);
 
-  // Weapon: aim at the cursor, fire on right-button while armed
+  // Weapon: the sight eases toward the cursor, then aim + fire while armed
   if (weapon.armed) {
+    const ease = 1 - Math.pow(0.0025, dt);   // ~frame-rate-independent lag
+    aimScreen.x += (cursor.x - aimScreen.x) * ease;
+    aimScreen.y += (cursor.y - aimScreen.y) * ease;
+    reticle.style.transform = `translate(${aimScreen.x}px, ${aimScreen.y}px)`;
     const ok = updateAim();
     weapon.setAim(aimPoint, ok);
     weapon.setFiring(rightDown || mobileFiring);
@@ -461,10 +507,12 @@ function animate() {
   updateSensor();
   updateTargetingHud();
 
-  // Countermeasures + instruments + radar
+  // Countermeasures + survivors + instruments + radar
   flares.update(dt);
+  soldiers.update(dt);
   instruments.update(heli);
   updateAmmoUI();
+  updateDamageBars();
   radar.draw(heli, targets, dt);
 
   renderer.render(scene, camera);
@@ -478,4 +526,4 @@ targets.lockNearest(heli.group.position);  // give the always-on sensor a target
 animate();
 
 // Expose for debugging in the console
-window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, instruments, radar, flares, get targetMode() { return targetMode; } };
+window.__sim = { scene, camera, heli, env, controls, input, weapon, targets, soldiers, instruments, radar, flares, get targetMode() { return targetMode; } };
