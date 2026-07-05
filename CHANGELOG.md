@@ -9,6 +9,14 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.15.0] — 2026-07-04
+### Changed
+- **Map is 6× larger** (2400 units across, up from 400) with proportionally more
+  terrain detail, rocks, cacti and mesas spread across it, and targets scattered
+  over a much wider area. The sky now follows the aircraft so it always surrounds
+  it on the bigger map.
+- **Instruments read imperial units**: altitude in **ft** and speed in **mph**.
+
 ## [0.14.1] — 2026-07-04
 ### Changed
 - **Default camera view is now REAR** (chase-from-behind, heading-tracking)

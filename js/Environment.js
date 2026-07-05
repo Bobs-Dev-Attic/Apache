@@ -13,8 +13,8 @@ import * as THREE from 'three';
 export class Environment {
   constructor(scene) {
     this.scene = scene;
-    this.size = 400;
-    this.segments = 120;
+    this.size = 2400;      // 6x the old 400-unit map
+    this.segments = 360;   // keep per-cell detail roughly in step with the size
     this.amp = 9;
     this._build();
   }
@@ -84,7 +84,10 @@ export class Environment {
         }
       `,
     });
-    scene.add(new THREE.Mesh(skyGeo, skyMat));
+    // The sky follows the camera (see updateSun) so it always surrounds the
+    // aircraft no matter how far it roams across the larger map.
+    this.sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(this.sky);
 
     scene.fog = new THREE.Fog(0xdcc9a3, 180, 520);
 
@@ -175,7 +178,7 @@ export class Environment {
     const half = this.size / 2 - 20;
 
     // Rocks
-    for (let i = 0; i < 46; i++) {
+    for (let i = 0; i < 300; i++) {
       const x = (rnd() * 2 - 1) * half;
       const z = (rnd() * 2 - 1) * half;
       if (Math.hypot(x, z) < 18) continue; // keep spawn clear
@@ -190,7 +193,7 @@ export class Environment {
     }
 
     // Cacti (saguaro-ish)
-    for (let i = 0; i < 34; i++) {
+    for (let i = 0; i < 210; i++) {
       const x = (rnd() * 2 - 1) * half;
       const z = (rnd() * 2 - 1) * half;
       if (Math.hypot(x, z) < 22) continue;
@@ -217,10 +220,10 @@ export class Environment {
       this._placeOnGround(g, x, z);
     }
 
-    // Distant mesas / buttes for silhouette interest
-    for (let i = 0; i < 9; i++) {
+    // Distant mesas / buttes for silhouette interest, spread across the map
+    for (let i = 0; i < 30; i++) {
       const ang = rnd() * Math.PI * 2;
-      const dist = 130 + rnd() * 45;
+      const dist = 160 + rnd() * (half - 160);
       const x = Math.cos(ang) * dist;
       const z = Math.sin(ang) * dist;
       const r = 10 + rnd() * 16;
@@ -238,6 +241,8 @@ export class Environment {
 
   /** keep the sun's shadow frustum centred on the aircraft */
   updateSun(focus) {
+    // Keep the sky dome centred on the aircraft (horizon stays at y=0).
+    if (this.sky) this.sky.position.set(focus.x, 0, focus.z);
     if (!this.sun) return;
     this.sun.position.set(focus.x + 80, focus.y + 120, focus.z + 40);
     this.sun.target.position.copy(focus);

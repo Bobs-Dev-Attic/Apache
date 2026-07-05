@@ -72,10 +72,10 @@ export class Targets {
   _spawn() {
     let seed = 4242;
     const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-    const count = 7;
+    const count = 12;
     for (let i = 0; i < count; i++) {
       const ang = rnd() * Math.PI * 2;
-      const dist = 40 + rnd() * 95;
+      const dist = 45 + rnd() * 470;   // spread across the larger map
       const x = Math.cos(ang) * dist;
       const z = Math.sin(ang) * dist;
       const y = this.env.heightAt(x, z);

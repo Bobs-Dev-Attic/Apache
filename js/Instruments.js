@@ -69,8 +69,8 @@ export class Instruments {
   }
 
   update(heli) {
-    const spd = heli.speedKmh;
-    const alt = Math.max(0, heli.altitude);
+    const spd = heli.speedKmh * 0.621371;         // km/h -> mph
+    const alt = Math.max(0, heli.altitude) * 3.28084; // m -> ft
     const hdg = heli.headingDeg;
     const rtr = heli.rotorSpeed * 100;
 
@@ -88,10 +88,10 @@ export class Instruments {
     this.aiPitch.setAttribute('transform', `translate(0 ${(pitchDeg * 1.1).toFixed(1)})`);
 
     // Airspeed & altitude arc needles (-120°..+120° over the range)
-    const asiA = -120 + Math.min(spd, 250) / 250 * 240;
+    const asiA = -120 + Math.min(spd, 160) / 160 * 240;   // 0..160 mph
     this.asiNeedle.setAttribute('transform', `rotate(${asiA.toFixed(1)} 50 52)`);
     this.asiVal.textContent = spd.toFixed(0);
-    const altA = -120 + Math.min(alt, 220) / 220 * 240;
+    const altA = -120 + Math.min(alt, 720) / 720 * 240;   // 0..720 ft
     this.altNeedle.setAttribute('transform', `rotate(${altA.toFixed(1)} 50 52)`);
     this.altVal.textContent = alt.toFixed(0);
 
