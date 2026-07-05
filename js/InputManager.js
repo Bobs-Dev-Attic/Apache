@@ -23,6 +23,7 @@ export class InputManager {
     this.joy = { x: 0, y: 0 };        // -1..1, y+ = up on screen (cyclic)
     this.mobileCollective = 0;         // -1..1 (right stick, up = climb)
     this.mobileYaw = 0;                // -1..1 (right stick, right = yaw right)
+    this.invertPitch = false;          // option: invert cyclic pitch axis
 
     this.onToggleFollow = null;
     this.onToggleHelp = null;
@@ -87,6 +88,8 @@ export class InputManager {
     roll += this.joy.x;
     yaw += this.mobileYaw;
     collective += this.mobileCollective;
+
+    if (this.invertPitch) pitch = -pitch;
 
     const clamp = (v) => Math.max(-1, Math.min(1, v));
     pitch = clamp(pitch);

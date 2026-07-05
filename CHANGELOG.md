@@ -9,6 +9,24 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.16.0] — 2026-07-05
+### Added
+- **Fuel.** Flying and moving now burn fuel. A real AH-64 carries ~370 US gal
+  and burns ~150 gal/hr in cruise (~2.5 h endurance); that's compressed to a
+  game tank of ~11 min hovering / ~4 min of hard cruise, with a hover +
+  translational + climb burn model. The FUEL gauge turns red near empty, and
+  running dry flames out the engine (the rotor spools down and you settle).
+- **Munition counts.** Every weapon is now limited — GUN 1200, RKT 38, MSL 16,
+  FLARE 30 (roughly an Apache load). Counts show on the panel and the mobile
+  weapon pad, empty weapons are refused, and the gun stops when dry.
+- **Menu.** The top-left **☰ menu** opens **New Game**, **How to Play** and
+  **Options** (unlimited fuel, unlimited ammo, invert cyclic — persisted).
+### Changed
+- **Tap the sensor screen to cycle targets** (replaces the swipe gesture and the
+  CYCLE button); the Tab key still cycles on desktop.
+- **Instrument panel** is docked to the bottom of the screen, a bit larger, with
+  the collapse/mini mode removed and a fuel gauge + ammo readout added.
+
 ## [0.15.0] — 2026-07-04
 ### Changed
 - **Map is 6× larger** (2400 units across, up from 400) with proportionally more

@@ -29,6 +29,19 @@ export class Helicopter {
     this.throttle = 0;                // 0..1 engine power (drives movement)
     this.altitude = 12;
 
+    // --- fuel ---
+    // A real AH-64 carries ~370 US gal of internal fuel and burns roughly
+    // 150 gal/hr in cruise, giving ~2.5 h endurance. That's far too long for a
+    // play session, so we keep the *ratios* (a moving/climbing aircraft burns
+    // more than a hover) but compress the tank to a few minutes of hard flying.
+    this.fuel = 1;                    // 0..1 fraction of the tank
+    this.fuelCapacityGal = 370;       // for display only
+    this.unlimitedFuel = false;
+    this._idleBurn = 0.0015;          // hover: ~1/0.0015 ≈ 11 min
+    this._cruiseBurn = 0.0026;        // full cyclic adds → ~4 min at cruise
+    this._climbBurn = 0.0018;         // climbing on the collective adds more
+    this.outOfFuel = false;
+
     // Static visual yaw offset applied to the model only (does not affect the
     // flight/travel direction). Negative = clockwise viewed from above.
     // The body is now built square (fuselage aligned with the nose/tail axis),
@@ -283,6 +296,18 @@ export class Helicopter {
    * @param {number} groundY  terrain height beneath the aircraft
    */
   update(dt, ctl, groundY = 0) {
+    // Fuel burn — idle (rotor turning) + translational (cyclic throttle) +
+    // climb (collective up). Running dry flames the engine out and the rotor
+    // spools down, so the aircraft settles/autorotates toward the ground.
+    if (this.unlimitedFuel) this.fuel = 1;
+    if (this.fuel > 0 && this.rotorSpeed > 0.05) {
+      const climb = Math.max(0, ctl.collective || 0);
+      const burn = this._idleBurn + this._cruiseBurn * (ctl.throttle || 0) + this._climbBurn * climb;
+      this.fuel = Math.max(0, this.fuel - burn * dt);
+    }
+    this.outOfFuel = this.fuel <= 0;
+    this.targetRotor = this.outOfFuel ? 0 : 1;
+
     // Rotor spool
     this.rotorSpeed += (this.targetRotor - this.rotorSpeed) * Math.min(1, dt * 1.2);
     const powered = this.rotorSpeed > 0.35;
@@ -390,5 +415,13 @@ export class Helicopter {
     let d = (this.heading * 180 / Math.PI) % 360;
     if (d < 0) d += 360;
     return d;
+  }
+  get fuelPct() { return this.fuel * 100; }
+
+  /** Top off the tank and re-light the engine. */
+  refuel() {
+    this.fuel = 1;
+    this.outOfFuel = false;
+    this.targetRotor = 1;
   }
 }

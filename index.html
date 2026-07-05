@@ -56,11 +56,9 @@
     <p>Rotate your device to landscape</p>
   </div>
 
-  <!-- Heads-up display / instrument panel -->
+  <!-- Heads-up display / instrument panel (pinned to the bottom) -->
   <div id="hud">
     <div id="instruments">
-      <button id="instr-collapse" class="instr-collapse" title="Collapse instruments">▾</button>
-
       <!-- Full gauge cluster -->
       <div class="instr-full">
         <!-- Artificial horizon -->
@@ -122,16 +120,22 @@
           <text class="g-val" id="rtr-val" x="23" y="90">0</text>
           <text class="g-label" x="23" y="12">RTR</text>
         </svg>
+
+        <!-- Fuel -->
+        <svg class="gauge rtr" viewBox="0 0 46 100" aria-label="fuel">
+          <rect x="14" y="16" width="18" height="60" rx="3" fill="rgba(255,226,170,.14)"/>
+          <rect id="fuel-bar" x="14" y="16" width="18" height="60" rx="3" fill="#8dff9e"/>
+          <text class="g-val" id="fuel-val" x="23" y="90">100</text>
+          <text class="g-label" x="23" y="12">FUEL</text>
+        </svg>
       </div>
 
-      <!-- Collapsed mini readout -->
-      <div class="instr-mini">
-        <div class="hud-panel">
-          <div class="hud-row"><span class="hud-label">ALT</span><span id="hud-alt">0</span><span class="hud-unit">ft</span></div>
-          <div class="hud-row"><span class="hud-label">SPD</span><span id="hud-spd">0</span><span class="hud-unit">mph</span></div>
-          <div class="hud-row"><span class="hud-label">HDG</span><span id="hud-hdg">0</span><span class="hud-unit">°</span></div>
-          <div class="hud-row"><span class="hud-label">RTR</span><span id="hud-rtr">0</span><span class="hud-unit">%</span></div>
-        </div>
+      <!-- Ammunition readout -->
+      <div id="ammo-row">
+        <span class="ammo" id="ammo-gun"><b>GUN</b><i>1200</i></span>
+        <span class="ammo" id="ammo-rockets"><b>RKT</b><i>38</i></span>
+        <span class="ammo" id="ammo-missiles"><b>MSL</b><i>16</i></span>
+        <span class="ammo" id="ammo-flares"><b>FLR</b><i>30</i></span>
       </div>
     </div>
     <div id="gun-status" class="gun-status hidden">● GUN ARMED</div>
@@ -143,9 +147,18 @@
     <div class="radar-label">RADAR</div>
   </div>
 
-  <!-- Help + camera-view buttons (right of the cyclic stick) -->
+  <!-- Menu (top-left) -->
+  <div id="menu">
+    <button id="btn-menu" class="ui-btn" title="Menu" aria-label="Menu">☰</button>
+    <div id="menu-panel" class="hidden">
+      <button class="menu-item" data-act="new">New Game</button>
+      <button class="menu-item" data-act="help">How to Play</button>
+      <button class="menu-item" data-act="options">Options</button>
+    </div>
+  </div>
+
+  <!-- Camera-view button (right of the cyclic stick) -->
   <div id="top-controls">
-    <button id="btn-help" class="ui-btn" title="Controls">?</button>
     <button id="btn-recenter" class="ui-btn" title="Camera view (cycle)">🎥</button>
     <span id="view-label">ISO</span>
   </div>
@@ -182,8 +195,19 @@
           </ul>
         </div>
       </div>
-      <p class="help-mobile">On mobile: the <b>left stick</b> is the cyclic — tilt it to fly in that direction (the further you push, the more power); the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶). The <b>2×2 pad above the left stick</b> selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares); the <b>FIRE</b> button shoots — hold for the gun, tap for rockets/missiles. <b>Swipe the sensor screen</b> (under the radar) left / right — or tap <b>⟳</b> — to cycle targets.</p>
+      <p class="help-mobile">On mobile: the <b>left stick</b> is the cyclic — tilt it to fly in that direction (the further you push, the more power); the <b>right stick</b> climbs/descends (▲/▼) and yaws (◀/▶). The <b>2×2 pad above the left stick</b> selects a weapon (<b>GUN / RKT / MSL</b>, <b>✦</b> flares); the <b>FIRE</b> button shoots — hold for the gun, tap for rockets/missiles. <b>Tap the sensor screen</b> (under the radar) to cycle targets. Weapons and fuel are limited — watch the gauges; open the <b>☰ menu</b> for a New Game.</p>
       <button id="btn-close-help" class="ui-btn wide">Got it</button>
+    </div>
+  </div>
+
+  <!-- Options overlay -->
+  <div id="options-overlay" class="hidden">
+    <div class="help-card">
+      <h2>Options</h2>
+      <label class="opt"><input type="checkbox" id="opt-fuel"> Unlimited fuel</label>
+      <label class="opt"><input type="checkbox" id="opt-ammo"> Unlimited ammo</label>
+      <label class="opt"><input type="checkbox" id="opt-invert"> Invert cyclic (pitch)</label>
+      <button id="btn-close-options" class="ui-btn wide">Done</button>
     </div>
   </div>
 
@@ -206,13 +230,12 @@
       <button id="btn-fire" class="fire-btn">FIRE</button>
     </div>
 
-    <!-- Weapon selector: 2x2 grid above the left cyclic stick, CYCLE on top -->
+    <!-- Weapon selector: 2x2 grid above the left cyclic stick -->
     <div id="weapon-select">
-      <button id="btn-cycle" class="wpn-btn ghost">⟳<span>CYCLE</span></button>
-      <button id="btn-gun" class="wpn-btn">GUN<span>M230</span></button>
-      <button id="btn-rockets" class="wpn-btn">RKT<span>HYDRA</span></button>
-      <button id="btn-missiles" class="wpn-btn">MSL<span>HELLFIRE</span></button>
-      <button id="btn-flares" class="wpn-btn ghost">✦<span>FLARE</span></button>
+      <button id="btn-gun" class="wpn-btn">GUN<span>M230</span><b class="wpn-ct" id="ct-gun">0</b></button>
+      <button id="btn-rockets" class="wpn-btn">RKT<span>HYDRA</span><b class="wpn-ct" id="ct-rockets">0</b></button>
+      <button id="btn-missiles" class="wpn-btn">MSL<span>HELLFIRE</span><b class="wpn-ct" id="ct-missiles">0</b></button>
+      <button id="btn-flares" class="wpn-btn ghost">✦<span>FLARE</span><b class="wpn-ct" id="ct-flares">0</b></button>
     </div>
   </div>
 

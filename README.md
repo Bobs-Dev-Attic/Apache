@@ -22,8 +22,13 @@ the folder and open it.
   to the locked target (nose within 45°), missiles fly a high top-attack profile
   (nose within 120°). A hit throws debris and dirt, blows parts off the vehicle,
   and leaves a burning hulk with a smoke column and a scorched ground stain.
-- **Instruments** — a collapsible gauge cluster (artificial horizon, airspeed,
-  altimeter, heading compass, rotor) that folds down to a mini readout.
+  Every weapon has a limited munition count (GUN 1200, RKT 38, MSL 16, FLARE 30).
+- **Fuel** — flying and moving burn fuel; the tank runs a few minutes of hard
+  flying and the engine flames out when it runs dry.
+- **Instruments** — a bottom-docked gauge cluster (artificial horizon, airspeed,
+  altimeter, heading compass, rotor, fuel) with an ammo readout.
+- **Menu** — a top-left menu with New Game, How to Play and Options (unlimited
+  fuel / ammo, invert cyclic).
 - **Radar** — a heading-up top-down scope showing target blips, range rings and
   a sweep, with the locked target highlighted.
 - **Rotatable isometric camera** — orbit, tilt, zoom and pan; optionally
@@ -33,7 +38,7 @@ the folder and open it.
   - **Mobile**: twin on-screen joysticks (cyclic + collective/yaw) plus a
     weapon toolbar and a fire button, touch gestures for the camera.
 - **Landscape-first** — a rotate prompt appears on portrait phones.
-- **HUD** — altitude (ft), speed (mph), heading, rotor %.
+- **HUD** — altitude (ft), speed (mph), heading, rotor %, fuel %.
 
 ## Controls
 
@@ -64,9 +69,9 @@ the folder and open it.
 
 ### Weapons — mobile
 - **GUN / RKT / MSL / ✦** — a 2×2 pad above the left stick: select the chain
-  gun, rockets or missiles, or deploy flares (**✦**).
-- **⟳ CYCLE** (bar above the pad) or **swipe the sensor screen** left / right —
-  cycle the locked target (right = next, left = previous).
+  gun, rockets or missiles, or deploy flares (**✦**). Each button shows its
+  remaining rounds.
+- **Tap the sensor screen** to cycle the locked target.
 - **FIRE** — hold to fire the gun (toward screen-centre), or tap to
   loose a rocket / missile at the locked target.
 - The **targeting sensor screen** under the radar is always live.

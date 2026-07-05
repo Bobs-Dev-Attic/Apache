@@ -16,7 +16,7 @@ export class Flares {
   }
 
   deploy(heli) {
-    if (this.cooldown > 0) return;
+    if (this.cooldown > 0) return false;
     this.cooldown = 0.22;
 
     const origin = heli.body.localToWorld(this._origin.set(-1.4, -0.7, 0));
@@ -42,6 +42,7 @@ export class Flares {
       const max = 1.3 + Math.random() * 0.5;
       this.parts.push({ mesh, vel, life: max, max });
     }
+    return true;
   }
 
   update(dt) {

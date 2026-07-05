@@ -82,6 +82,29 @@ const weapon = new Weapon(scene, heli);
 const reticle = document.getElementById('reticle');
 const gunStatus = document.getElementById('gun-status');
 
+/* ------------------------------------------------------------------ *
+ * Munitions — every weapon has a limited count (roughly an AH-64 load).
+ * ------------------------------------------------------------------ */
+const AMMO_MAX = { gun: 1200, rockets: 38, missiles: 16, flares: 30 };
+const ammo = { rockets: AMMO_MAX.rockets, missiles: AMMO_MAX.missiles, flares: AMMO_MAX.flares };
+let unlimitedAmmo = false;
+weapon.rounds = AMMO_MAX.gun;   // the gun tracks its own rounds (fired in Weapon.update)
+
+const WK = ['gun', 'rockets', 'missiles', 'flares'];
+function ammoCount(k) { return k === 'gun' ? weapon.rounds : ammo[k]; }
+function updateAmmoUI() {
+  const sel = weapon.armed ? 'gun' : targetMode;   // highlighted weapon
+  for (const k of WK) {
+    const empty = !unlimitedAmmo && ammoCount(k) <= 0;
+    const txt = unlimitedAmmo ? '∞' : String(ammoCount(k));
+    const row = document.getElementById('ammo-' + k);
+    if (row) { row.querySelector('i').textContent = txt; row.classList.toggle('empty', empty); row.classList.toggle('sel', k === sel); }
+    const ct = document.getElementById('ct-' + k);
+    if (ct) ct.textContent = txt;
+    document.getElementById('btn-' + k)?.classList.toggle('empty', empty);
+  }
+}
+
 input.onToggleGun = () => {
   weapon.armed = !weapon.armed;
   gunStatus.classList.toggle('hidden', !weapon.armed);
@@ -197,6 +220,7 @@ function flashNoFire() {
 
 // Dedicated fire buttons: 1 = rockets, 2 = missiles (at the locked target)
 function fireMunition(kind) {
+  if (!unlimitedAmmo && ammo[kind] <= 0) { flashNoFire(); return; }  // out of ammo
   if (!targets.lockedTarget) targets.lockNearest(heli.group.position);
   const tgt = targets.lockedTarget;
   if (!tgt) return;
@@ -204,6 +228,8 @@ function fireMunition(kind) {
   const from = heli.body.localToWorld(_v.set(0.2, -0.4, 1.6)); // wing pylon
   if (kind === 'missiles') targets.fireMissileAt(from, tgt);
   else targets.fireRocketAt(from, tgt);
+  if (!unlimitedAmmo) ammo[kind]--;
+  updateAmmoUI();
 }
 input.onFireRockets = () => fireMunition('rockets');
 input.onFireMissiles = () => fireMunition('missiles');
@@ -219,7 +245,13 @@ input.onFireUp = () => { mobileFiring = false; };
 
 // Flares (F)
 const flares = new Flares(scene);
-input.onDeployFlares = () => flares.deploy(heli);
+input.onDeployFlares = () => {
+  if (!unlimitedAmmo && ammo.flares <= 0) return;
+  if (flares.deploy(heli)) {           // deploy() is false while on cooldown
+    if (!unlimitedAmmo) ammo.flares--;
+    updateAmmoUI();
+  }
+};
 
 // Fire the selected munition at the locked target on right-click (one per press)
 canvas.addEventListener('pointerdown', (e) => {
@@ -291,8 +323,50 @@ function toggleHelp(force) {
   const show = force ?? helpOverlay.classList.contains('hidden');
   helpOverlay.classList.toggle('hidden', !show);
 }
-document.getElementById('btn-help').addEventListener('click', () => toggleHelp(true));
 document.getElementById('btn-close-help').addEventListener('click', () => toggleHelp(false));
+
+// Options overlay
+const optionsOverlay = document.getElementById('options-overlay');
+const optFuel = document.getElementById('opt-fuel');
+const optAmmo = document.getElementById('opt-ammo');
+const optInvert = document.getElementById('opt-invert');
+function toggleOptions(force) {
+  const show = force ?? optionsOverlay.classList.contains('hidden');
+  optionsOverlay.classList.toggle('hidden', !show);
+}
+function applyOptions() {
+  heli.unlimitedFuel = optFuel.checked;
+  unlimitedAmmo = optAmmo.checked;
+  weapon.unlimited = optAmmo.checked;
+  input.invertPitch = optInvert.checked;
+  updateAmmoUI();
+  try {
+    localStorage.setItem('apache-opts', JSON.stringify({ fuel: optFuel.checked, ammo: optAmmo.checked, invert: optInvert.checked }));
+  } catch (e) { /* storage unavailable */ }
+}
+try {
+  const o = JSON.parse(localStorage.getItem('apache-opts') || '{}');
+  optFuel.checked = !!o.fuel; optAmmo.checked = !!o.ammo; optInvert.checked = !!o.invert;
+} catch (e) { /* ignore */ }
+applyOptions();
+[optFuel, optAmmo, optInvert].forEach(el => el.addEventListener('change', applyOptions));
+document.getElementById('btn-close-options').addEventListener('click', () => toggleOptions(false));
+
+// Menu (top-left): New Game / How to Play / Options
+const menuPanel = document.getElementById('menu-panel');
+document.getElementById('btn-menu').addEventListener('click', (e) => {
+  e.stopPropagation();
+  menuPanel.classList.toggle('hidden');
+});
+document.addEventListener('click', (e) => { if (!e.target.closest('#menu')) menuPanel.classList.add('hidden'); });
+menuPanel.querySelectorAll('.menu-item').forEach((b) => b.addEventListener('click', () => {
+  menuPanel.classList.add('hidden');
+  const act = b.dataset.act;
+  if (act === 'new') location.reload();               // fresh world, fuel & ammo
+  else if (act === 'help') toggleHelp(true);
+  else if (act === 'options') toggleOptions(true);
+}));
+
 // The view button cycles through the camera view presets.
 const viewLabel = document.getElementById('view-label');
 controls.getHeading = () => heli.heading;
@@ -390,6 +464,7 @@ function animate() {
   // Countermeasures + instruments + radar
   flares.update(dt);
   instruments.update(heli);
+  updateAmmoUI();
   radar.draw(heli, targets, dt);
 
   renderer.render(scene, camera);
