@@ -23,6 +23,7 @@ export class Targets {
     this.debris = [];      // ballistic chunks / vehicle parts thrown by a blast
     this.hulks = [];        // burning wrecks that keep smoking
     this.scorches = [];     // scorch stains on the ground
+    this.onUnitDestroyed = null;  // (pos, survivors, groundY) => spawn fleeing soldiers
     this._spawn();
   }
 
@@ -84,6 +85,7 @@ export class Targets {
       group.position.set(x, y, z);
       group.rotation.y = rnd() * Math.PI * 2;
       this.scene.add(group);
+      const maxHp = isTank ? 100 : 55;
       this.list.push({
         group,
         pos: new THREE.Vector3(x, y + 1.4, z),
@@ -91,6 +93,12 @@ export class Targets {
         name: isTank ? 'T-72 TANK' : 'TECHNICAL',
         id: i + 1,
         radius: isTank ? 2.4 : 1.8,
+        hp: maxHp,
+        maxHp,
+        dmgState: 'ok',            // ok -> smoking -> burning -> (dead)
+        smokeT: 0,
+        flames: null,
+        crew: isTank ? 3 : 4,      // soldiers that may bail on destruction
       });
     }
   }
@@ -152,9 +160,9 @@ export class Targets {
     return true;
   }
 
-  _detonate(pos, target, scale = 1) {
+  /** Explosion FX at a point: fireball, rolling smoke ball and thrown debris. */
+  _blastFX(pos, scale = 1) {
     const groundY = this.env.heightAt(pos.x, pos.z);
-    // fireball
     const fire = new THREE.Mesh(
       new THREE.SphereGeometry(1.0 * scale, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0xffb44a, transparent: true, opacity: 1, depthWrite: false })
@@ -162,7 +170,6 @@ export class Targets {
     fire.position.copy(pos);
     this.scene.add(fire);
     this.explosions.push({ mesh: fire, life: 0.5, max: 0.5, grow: 5 * scale });
-    // rolling smoke ball
     const smoke = new THREE.Mesh(
       new THREE.SphereGeometry(1.2 * scale, 7, 6),
       new THREE.MeshBasicMaterial({ color: 0x3b342c, transparent: true, opacity: 0.9, depthWrite: false })
@@ -170,16 +177,88 @@ export class Targets {
     smoke.position.copy(pos).y += 0.6;
     this.scene.add(smoke);
     this.explosions.push({ mesh: smoke, life: 1.1, max: 1.1, grow: 3.5 * scale, rise: 2.2 });
-
-    // thrown dirt, dust and fragments
     this._spawnDebris(pos, groundY, scale);
+  }
 
-    // shred the vehicle: parts fly off, a burning hulk + ground stain remain
-    if (target && target.group) {
-      target.alive = false;
-      this._wreckTarget(target, pos, groundY, scale);
-      this._scorch(target.pos, groundY, target.radius);
+  /** Turn a target into a smoldering wreck + scorch, and let survivors flee. */
+  _destroy(target, scale = 1.4) {
+    if (!target.alive) return;
+    target.alive = false;
+    if (target.flames) {                    // the wreck adds its own flames
+      target.group.remove(target.flames);
+      this._disposeGroup(target.flames);
+      target.flames = null;
     }
+    const groundY = this.env.heightAt(target.pos.x, target.pos.z);
+    this._wreckTarget(target, target.pos, groundY, scale);
+    this._scorch(target.pos, groundY, target.radius);
+    if (this.onUnitDestroyed && target.crew > 0) {
+      const survivors = Math.max(0, target.crew - (1 + Math.floor(Math.random() * 2)));
+      if (survivors > 0) this.onUnitDestroyed(target.pos.clone(), survivors, groundY);
+    }
+  }
+
+  /** Rocket / missile: explosion at the impact point, lethal to the target. */
+  _detonate(pos, target, scale = 1) {
+    this._blastFX(pos, scale);
+    if (target && target.group && target.alive) this._destroy(target, Math.max(scale, 1.4));
+  }
+
+  /**
+   * Cumulative damage (from gun rounds). Ramps a vehicle from a smoking to a
+   * burning state, throwing pieces along the way, then destroys it at 0 HP.
+   */
+  damage(target, amount, point) {
+    if (!target || !target.alive) return;
+    target.hp -= amount;
+    if (point) this._hitSpall(point);
+    const frac = target.hp / target.maxHp;
+    if (target.hp <= 0) { this._blastFX(target.pos, 1.5); this._destroy(target, 1.5); return; }
+    if (frac <= 0.34 && target.dmgState !== 'burning') {
+      target.dmgState = 'burning';
+      const flames = this._makeFlames(0.7);
+      flames.position.set((Math.random() - 0.5) * 0.8, 1.5, (Math.random() - 0.5) * 0.6);
+      target.group.add(flames);
+      target.flames = flames;
+      this._ejectPieces(target, 3);
+    } else if (frac <= 0.68 && target.dmgState === 'ok') {
+      target.dmgState = 'smoking';
+      this._ejectPieces(target, 1);
+    }
+  }
+
+  /** Throw a few small charred pieces off a damaged vehicle. */
+  _ejectPieces(target, n) {
+    const groundY = this.env.heightAt(target.pos.x, target.pos.z);
+    for (let k = 0; k < n; k++) {
+      const s = 0.12 + Math.random() * 0.2;
+      const mesh = new THREE.Mesh(
+        Math.random() < 0.5 ? new THREE.TetrahedronGeometry(s) : new THREE.BoxGeometry(s, s, s),
+        this._mat(0x2b2620, { roughness: 1, metalness: 0.4 })
+      );
+      mesh.castShadow = true;
+      const p = target.pos.clone(); p.y += 0.6;
+      mesh.position.copy(p);
+      this.scene.add(mesh);
+      const ang = Math.random() * Math.PI * 2, spd = 3 + Math.random() * 5;
+      const vel = new THREE.Vector3(Math.cos(ang) * spd, 5 + Math.random() * 5, Math.sin(ang) * spd);
+      this.debris.push({ mesh, pos: p, vel, angVel: this._rndSpin(10), groundY, life: 2 + Math.random() * 1.5, fade: 0.5 });
+    }
+  }
+
+  /** Tiny dark spall puff where a round strikes armour. */
+  _hitSpall(point) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 5, 4),
+      new THREE.MeshBasicMaterial({ color: 0x2a241c, transparent: true, opacity: 0.7, depthWrite: false })
+    );
+    puff.position.copy(point);
+    this.scene.add(puff);
+    this.explosions.push({ mesh: puff, life: 0.35, max: 0.35, grow: 1.4, rise: 0.4 });
+  }
+
+  _disposeGroup(g) {
+    g.traverse(o => { o.geometry?.dispose?.(); o.material?.dispose?.(); });
   }
 
   _rndSpin(s = 8) {
@@ -497,6 +576,29 @@ export class Targets {
         );
         this.scene.add(puff);
         this.explosions.push({ mesh: puff, life: 2.4 + Math.random(), max: 3.4, grow: 3.0, rise: 3.6 });
+      }
+    }
+
+    // damaged-but-alive vehicles: rising smoke, and flame flicker if burning
+    for (const t of this.list) {
+      if (!t.alive || t.dmgState === 'ok') continue;
+      if (t.flames) {
+        for (const f of t.flames.children) {
+          f.scale.set(0.8 + Math.random() * 0.5, 0.7 + Math.random() * 0.7, 0.8 + Math.random() * 0.5);
+          f.material.opacity = 0.6 + Math.random() * 0.4;
+        }
+      }
+      t.smokeT -= dt;
+      if (t.smokeT <= 0) {
+        const burning = t.dmgState === 'burning';
+        t.smokeT = burning ? 0.2 : 0.42;
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(0.4 + Math.random() * 0.4, 6, 5),
+          new THREE.MeshBasicMaterial({ color: burning ? 0x201a14 : 0x6b6055, transparent: true, opacity: burning ? 0.7 : 0.5, depthWrite: false })
+        );
+        puff.position.set(t.pos.x + (Math.random() - 0.5) * 0.7, t.pos.y + 0.8, t.pos.z + (Math.random() - 0.5) * 0.7);
+        this.scene.add(puff);
+        this.explosions.push({ mesh: puff, life: burning ? 2.2 : 1.6, max: burning ? 3.0 : 2.2, grow: 2.8, rise: burning ? 3.2 : 2.4 });
       }
     }
 

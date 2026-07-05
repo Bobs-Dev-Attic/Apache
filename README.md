@@ -23,6 +23,9 @@ the folder and open it.
   (nose within 120°). A hit throws debris and dirt, blows parts off the vehicle,
   and leaves a burning hulk with a smoke column and a scorched ground stain.
   Every weapon has a limited munition count (GUN 1200, RKT 38, MSL 16, FLARE 30).
+  Vehicles have hit points and a floating damage bar: sustained gun fire makes
+  them smoke, then burn, then explode; tracers ricochet off armour; and
+  survivors flee the wreck on foot (running, crawling wounded, or on fire).
 - **Fuel** — flying and moving burn fuel; the tank runs a few minutes of hard
   flying and the engine flames out when it runs dry.
 - **Instruments** — a bottom-docked gauge cluster (artificial horizon, airspeed,

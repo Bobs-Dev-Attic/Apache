@@ -27,9 +27,12 @@ export class Weapon {
 
     this.tracers = [];
     this.impacts = [];
+    this.ricochets = [];           // spark fragments bouncing off armour
     this.shotsFired = 0;
     this.rounds = Infinity;        // remaining 30mm rounds (set by main)
     this.unlimited = false;
+    this.getTargets = null;        // () => target list, for hit tests
+    this.onTargetHit = null;       // (target, point) => apply damage
 
     this._tmpFrom = new THREE.Vector3();
     this._tmpDir = new THREE.Vector3();
@@ -90,9 +93,25 @@ export class Weapon {
   _spawnTracer() {
     const from = this._muzzleWorld(this._tmpFrom).clone();
     const dir = this._tmpDir.copy(this.aim).sub(from);
-    const dist = dir.length();
+    let dist = dir.length();
     if (dist < 0.001) return;
     dir.normalize();
+
+    // Hit test against targets along the shot: the nearest whose centre is
+    // within its radius of the ray gets hit, and the tracer stops there.
+    let hitTarget = null;
+    const tgts = this.getTargets ? this.getTargets() : null;
+    if (tgts) {
+      for (const t of tgts) {
+        if (!t.alive) continue;
+        const px = t.pos.x - from.x, py = t.pos.y - from.y, pz = t.pos.z - from.z;
+        const proj = px * dir.x + py * dir.y + pz * dir.z;   // along the ray
+        if (proj < 0 || proj > dist) continue;
+        const cx = from.x + dir.x * proj, cy = from.y + dir.y * proj, cz = from.z + dir.z * proj;
+        const d = Math.hypot(t.pos.x - cx, t.pos.y - cy, t.pos.z - cz);
+        if (d < (t.radius || 2)) { dist = proj; hitTarget = t; }
+      }
+    }
 
     const geo = new THREE.CylinderGeometry(0.09, 0.09, 2.6, 5);
     const mat = new THREE.MeshBasicMaterial({ color: 0xffe15a });
@@ -102,7 +121,7 @@ export class Weapon {
     mesh.position.copy(from);
     this.scene.add(mesh);
 
-    this.tracers.push({ mesh, from, dir, travelled: 0, total: dist, speed: this.tracerSpeed });
+    this.tracers.push({ mesh, from, dir: dir.clone(), travelled: 0, total: dist, speed: this.tracerSpeed, hitTarget });
     this.shotsFired++;
 
     // muzzle flash
@@ -111,6 +130,35 @@ export class Weapon {
     this._flashTimer = 0.05;
 
     // slight aim scatter so it reads like a machine gun (re-aim uses fresh aim each shot)
+  }
+
+  /** A few bright sparks that deflect off the point of impact on armour. */
+  _ricochet(pos, inDir) {
+    // reflect the incoming direction off a roughly-upward surface, then scatter
+    const base = new THREE.Vector3(inDir.x, Math.abs(inDir.y) + 0.6, inDir.z).normalize();
+    const n = 3 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < n; k++) {
+      const spark = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 5, 4),
+        new THREE.MeshBasicMaterial({ color: 0xffe06a, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      spark.position.copy(pos);
+      this.scene.add(spark);
+      const spd = 8 + Math.random() * 12;
+      const vel = base.clone()
+        .add(new THREE.Vector3((Math.random() - 0.5) * 1.1, Math.random() * 0.6, (Math.random() - 0.5) * 1.1))
+        .normalize().multiplyScalar(spd);
+      const max = 0.25 + Math.random() * 0.3;
+      this.ricochets.push({ mesh: spark, vel, life: max, max });
+    }
+    // a small flash at the strike
+    const flash = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 6, 5),
+      new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })
+    );
+    flash.position.copy(pos);
+    this.scene.add(flash);
+    this.impacts.push({ mesh: flash, life: 0.1, max: 0.1, spark: true });
   }
 
   _spawnImpact(pos) {
@@ -161,13 +209,33 @@ export class Weapon {
       t.travelled += t.speed * dt;
       if (t.travelled >= t.total) {
         const hit = t.from.clone().addScaledVector(t.dir, t.total);
-        this._spawnImpact(hit);
+        if (t.hitTarget && t.hitTarget.alive) {
+          this.onTargetHit?.(t.hitTarget, hit);
+          this._ricochet(hit, t.dir);      // sparks bounce off the armour
+        } else {
+          this._spawnImpact(hit);          // dust on the ground
+        }
         this.scene.remove(t.mesh);
         t.mesh.geometry.dispose();
         t.mesh.material.dispose();
         this.tracers.splice(i, 1);
       } else {
         t.mesh.position.copy(t.from).addScaledVector(t.dir, t.travelled);
+      }
+    }
+
+    // ricochet sparks (ballistic, brief)
+    for (let i = this.ricochets.length - 1; i >= 0; i--) {
+      const s = this.ricochets[i];
+      s.life -= dt;
+      s.vel.y -= 26 * dt;
+      s.mesh.position.addScaledVector(s.vel, dt);
+      s.mesh.material.opacity = Math.max(0, s.life / s.max);
+      if (s.life <= 0) {
+        this.scene.remove(s.mesh);
+        s.mesh.geometry.dispose();
+        s.mesh.material.dispose();
+        this.ricochets.splice(i, 1);
       }
     }
 
