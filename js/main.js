@@ -409,20 +409,16 @@ menuPanel.querySelectorAll('.menu-item').forEach((b) => b.addEventListener('clic
   else if (act === 'options') toggleOptions(true);
 }));
 
-// The view button cycles through the camera view presets.
-const viewLabel = document.getElementById('view-label');
+// Camera-view picker: a 3x3 grid of buttons, one per preset. The active view
+// button is highlighted (kept in sync if a view is set elsewhere).
 controls.getHeading = () => heli.heading;
-controls.onViewChange = (name) => {
-  if (!viewLabel) return;
-  viewLabel.textContent = name;
-  viewLabel.classList.add('show');
-  clearTimeout(viewLabel._t);
-  viewLabel._t = setTimeout(() => viewLabel.classList.remove('show'), 1400);
+const viewBtns = [...document.querySelectorAll('#view-grid .view-btn')];
+controls.onViewChange = () => {
+  viewBtns.forEach((b) => b.classList.toggle('active', +b.dataset.view === controls.viewIndex));
 };
-document.getElementById('btn-recenter').addEventListener('click', () => controls.cycleView());
-// Start in the rear (chase-from-behind) view by default.
-const _rearView = controls.views.findIndex(v => v.name === 'REAR');
-controls.setView(_rearView >= 0 ? _rearView : 0);
+viewBtns.forEach((b) => b.addEventListener('click', () => controls.setView(+b.dataset.view)));
+// Start in the REAR (behind, chase) view by default.
+controls.setView(controls.views.findIndex(v => v.name === 'REAR'));
 
 // Instrument gauge cluster + radar scope
 const instruments = new Instruments();

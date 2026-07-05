@@ -160,10 +160,19 @@
     </div>
   </div>
 
-  <!-- Camera-view button (right of the cyclic stick) -->
+  <!-- Camera-view picker: a 3x3 compass of views around the aircraft -->
   <div id="top-controls">
-    <button id="btn-recenter" class="ui-btn" title="Camera view (cycle)">🎥</button>
-    <span id="view-label">ISO</span>
+    <div id="view-grid" title="Camera view">
+      <button class="view-btn" data-view="0">↖<span>REAR L</span></button>
+      <button class="view-btn" data-view="1">↑<span>REAR</span></button>
+      <button class="view-btn" data-view="2">↗<span>REAR R</span></button>
+      <button class="view-btn" data-view="3">←<span>SIDE L</span></button>
+      <button class="view-btn" data-view="4">⊕<span>TOP</span></button>
+      <button class="view-btn" data-view="5">→<span>SIDE R</span></button>
+      <button class="view-btn" data-view="6">↙<span>FRNT L</span></button>
+      <button class="view-btn" data-view="7">↓<span>FRONT</span></button>
+      <button class="view-btn" data-view="8">↘<span>FRNT R</span></button>
+    </div>
   </div>
 
   <!-- Help overlay -->
@@ -194,7 +203,7 @@
             <li><b>Wheel</b> — Zoom in / out</li>
             <li><b>Touch:</b> 1 finger rotate, 2 finger pinch-zoom &amp; pan</li>
             <li><b>V</b> — Follow helicopter on/off</li>
-            <li><b>🎥 button</b> — Cycle camera views (chase, rear, side, top-down…)</li>
+            <li><b>View grid</b> (top-left) — pick a camera view (rear, side, front, top-down)</li>
           </ul>
         </div>
       </div>

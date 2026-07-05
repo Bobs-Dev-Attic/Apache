@@ -9,6 +9,13 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.18.0] — 2026-07-05
+### Changed
+- **Camera views are now a 3×3 picker** (top-left) instead of a single cycle
+  button — a compass of camera positions around the aircraft: REAR L / REAR /
+  REAR R, SIDE L / TOP / SIDE R, FRONT L / FRONT / FRONT R. The active view is
+  highlighted; REAR is the default and all but TOP track the heading.
+
 ## [0.17.1] — 2026-07-05
 ### Changed
 - **Reworked the Hellfire top-attack flight** so it reads clearly and hits from

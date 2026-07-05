@@ -146,34 +146,43 @@ html, body {
   .gauge.rtr { width: 24px; height: 54px; }
 }
 
-/* ---------- Top-right controls ---------- */
+/* ---------- Camera-view picker (top-left, below the menu) ---------- */
 #top-controls {
   position: fixed;
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  left: calc(168px + env(safe-area-inset-left));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  top: calc(62px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
   z-index: 32;
 }
-#view-label {
-  min-width: 42px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: rgba(20, 16, 8, 0.72);
-  border: 1px solid var(--panel-line);
-  color: var(--accent);
-  font-size: 11px; font-weight: 700; letter-spacing: 2px;
-  text-align: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
+#view-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  gap: 4px;
 }
-#view-label.show { opacity: 1; }
+.view-btn {
+  position: relative;
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-line);
+  background: var(--panel);
+  color: var(--hud-text);
+  font-size: 16px; line-height: 1;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: background 0.12s, transform 0.05s;
+}
+.view-btn span { font-size: 6px; letter-spacing: 0.4px; opacity: 0.5; margin-top: 1px; }
+.view-btn:hover { background: rgba(60, 46, 22, 0.7); }
+.view-btn:active { transform: scale(0.93); }
+.view-btn.active {
+  background: radial-gradient(circle at 35% 30%, var(--accent), #a9701f);
+  border-color: var(--accent);
+  color: #1a140b;
+}
+.view-btn.active span { opacity: 0.85; }
 @media (max-height: 430px) {
-  #top-controls { left: calc(150px + env(safe-area-inset-left)); bottom: calc(14px + env(safe-area-inset-bottom)); gap: 6px; }
-  .ui-btn { width: 38px; height: 38px; font-size: 18px; }
+  #view-grid { grid-template-columns: repeat(3, 34px); gap: 3px; }
+  .view-btn { width: 34px; height: 34px; font-size: 15px; }
 }
 .ui-btn {
   background: var(--panel);
