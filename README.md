@@ -33,7 +33,7 @@ the folder and open it.
   - **Mobile**: twin on-screen joysticks (cyclic + collective/yaw) plus a
     weapon toolbar and a fire button, touch gestures for the camera.
 - **Landscape-first** — a rotate prompt appears on portrait phones.
-- **HUD** — altitude, speed, heading, rotor %.
+- **HUD** — altitude (ft), speed (mph), heading, rotor %.
 
 ## Controls
 
