@@ -9,6 +9,16 @@ The scheme is `MAJOR.MINOR.PATCH`:
 - **MINOR** — new features / content
 - **MAJOR** — large or breaking overhauls
 
+## [0.17.1] — 2026-07-05
+### Changed
+- **Reworked the Hellfire top-attack flight** so it reads clearly and hits from
+  directly overhead: the missile drops off the rail, the **motor lights (a
+  visible exhaust plume + hot smoke)** and it flies forward a little, then
+  **climbs steeply to a high apex**, flies to directly over the target, and
+  **dives straight down** onto it. Fixed the far-target case where it flattened
+  out and skimmed/overshot instead of diving vertically (it now brakes on
+  approach and the proximity fuze accounts for the missile's speed).
+
 ## [0.17.0] — 2026-07-05
 ### Added
 - **Vehicle damage model.** Targets now have hit points and take cumulative
